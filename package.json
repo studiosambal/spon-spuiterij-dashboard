@@ -1,24 +1,14 @@
 {
-  "name": "spuitwerkonline-dashboard",
+  "name": "spon-spuiterij-dashboard",
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "workspaces": [
+    "apps/*"
+  ],
   "scripts": {
-    "dev": "vite --host",
-    "build": "vue-tsc && vite build",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "@primevue/themes": "^4.5.4",
-    "primeicons": "^7.0.0",
-    "primevue": "^4.3.3",
-    "vue": "^3.5.13",
-    "vue-router": "^4.5.0"
-  },
-  "devDependencies": {
-    "@vitejs/plugin-vue": "^5.2.3",
-    "typescript": "^5.7.3",
-    "vite": "^6.3.3",
-    "vue-tsc": "^2.2.8"
+    "dev:v1": "npm run dev -w v1",
+    "dev:v2": "npm run dev -w v2",
+    "build": "npm run build -w v1 && npm run build -w v2 && node scripts/assemble-landing.mjs"
   }
 }

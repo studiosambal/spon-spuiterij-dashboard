@@ -1,0 +1,22 @@
+# Netlify-config voor de SpuitwerkOnline spuiter-dashboard monorepo.
+# Bouwt v1 (apps/v1) en v2 (apps/v2) plus een landingspagina naar dist/.
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# SPA-fallback per versie, zodat ook diepe links (bv. /v2/order/123)
+# de juiste index.html van die versie laden. De root (/) serveert
+# dist/index.html (de landingspagina) rechtstreeks.
+[[redirects]]
+  from = "/v1/*"
+  to = "/v1/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/v2/*"
+  to = "/v2/index.html"
+  status = 200

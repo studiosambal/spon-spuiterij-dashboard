@@ -4,49 +4,86 @@ Een mobiel-eerst webapp waarmee spuiters van SpuitwerkOnline hun opdrachten behe
 
 > **Demo / prototype** — er is (nog) geen backend. Alle data is mock-data in het geheugen. Een refresh zet alles terug naar de uitgangssituatie.
 
+## Twee versies naast elkaar
+
+Deze repo is een **monorepo** met twee zelfstandige versies van het ontwerpvoorstel, zodat je ze makkelijk kunt vergelijken:
+
+| Versie | Map | Live op | Rol |
+|--------|-----|---------|-----|
+| **v1** | `apps/v1/` | `/v1` | Bevroren eerder voorstel |
+| **v2** | `apps/v2/` | `/v2` | Nieuwste voorstel (hierin wordt doorontwikkeld) |
+
+De hoofd-URL (`/`) toont een kleine **landingspagina** (`landing/`) met een keuze tussen v1 en v2. Beide versies delen via npm-workspaces één `node_modules` — je installeert dus maar één keer.
+
 ## Tech stack
 
 - **Vue 3** + **TypeScript** + **Vite**
-- **Vue Router** (hash-history, geen serverconfig nodig)
+- **Vue Router** (history-mode; elke versie draait onder zijn eigen base `/v1/` of `/v2/`)
 - **PrimeVue 4** met een eigen `SkyPreset` (Lara-basis, sky-500 als primaire kleur) + **PrimeIcons**
 - Styling via CSS custom properties in `src/assets/main.css` — **geen Tailwind**
 - Lettertype: **Fira Sans** (Google Fonts)
+- **npm-workspaces** monorepo; deploy via **Netlify**
 
 ## Aan de slag
 
 Vereist: Node.js 18+ en npm.
 
 ```bash
-npm install      # dependencies installeren
-npm run dev      # dev-server op http://localhost:5173 (ook op het netwerk via --host)
+npm install        # alle dependencies in één keer (workspaces, gedeelde node_modules)
+npm run dev:v2     # dev-server voor v2 op http://localhost:5174
+npm run dev:v1     # dev-server voor v1 op http://localhost:5173
 ```
 
-Open de URL op je telefoon (of versmal je browser tot ±430px) voor de bedoelde weergave.
+Je werkt doorgaans aan één versie tegelijk. Open de URL op je telefoon (of versmal je browser tot ±430px) voor de bedoelde weergave.
 
-## Scripts
+## Scripts (root)
 
 | Commando | Doel |
 |----------|------|
-| `npm run dev` | Dev-server met hot reload, bereikbaar op alle netwerkinterfaces |
-| `npm run build` | Type-check (`vue-tsc`) en productie-build → output naar `public/` |
-| `npm run preview` | Lokale preview van de productie-build |
+| `npm run dev:v1` | Dev-server voor v1 (poort 5173, hot reload) |
+| `npm run dev:v2` | Dev-server voor v2 (poort 5174, hot reload) |
+| `npm run build` | Bouwt v1 → `dist/v1`, v2 → `dist/v2` en de landing → `dist/index.html` |
 
-Er zijn geen tests geconfigureerd. TypeScript-fouten komen naar boven via `vue-tsc` tijdens de build.
+Per versie kun je ook losse scripts draaien met `npm run <script> -w v1` (of `-w v2`).
+
+## Deploy (Netlify)
+
+Netlify bouwt vanaf branch `main` met `npm run build` en publiceert de map `dist`. Configuratie staat in `netlify.toml` (build-commando, publish-map, Node-versie, en SPA-redirects per versie). Resultaat:
+
+```
+/        → landingspagina (keuze v1 / v2)
+/v1      → versie 1
+/v2      → versie 2
+```
 
 ## Projectstructuur
 
 ```
-src/
+apps/
+├── v1/                  # Bevroren eerder voorstel (base /v1/)
+│   ├── src/
+│   ├── index.html
+│   └── vite.config.ts
+└── v2/                  # Nieuwste voorstel (base /v2/) — kopie van v1 als startpunt
+landing/index.html       # Keuzepagina op /
+scripts/assemble-landing.mjs   # Kopieert landing/ naar dist/ tijdens de build
+netlify.toml             # Build- en deployconfig
+dist/                    # Build-output (gitignored; Netlify bouwt dit)
+```
+
+Elke versie heeft dezelfde interne opbouw:
+
+```
+apps/<versie>/src/
 ├── views/              # Pagina's (Dashboard, OrderDetail, Meerwerk, ...)
 ├── composables/
 │   ├── useOrders.ts    # Centrale datalaag: types, labelmaps, mock-orders, mutaties
 │   └── useAuth.ts      # Mock ingelogde spuiter (naam, bedrijf, initialen)
-├── router/index.ts     # Routes (hash-history)
+├── router/index.ts     # Routes (history-mode)
 ├── assets/main.css     # Alle styling via CSS custom properties
 ├── images/             # SVG's en afbeeldingen
 ├── App.vue
 └── main.ts             # App-bootstrap + PrimeVue/SkyPreset
-public/                 # Build-output én vooraf gebouwde statische assets
 ```
 
 ### Datalaag
@@ -64,6 +101,8 @@ State wordt gedeeld via module-niveau `ref()`-objecten in de composables — een
 | `/order/:id/foto/:type` | Foto's vastleggen (`before`/`after`) |
 | `/profiel` | Profiel met financieel/uitbetalingsoverzicht |
 | `/account` | Accountinstellingen (wachtwoord, uitloggen) |
+
+(Routes zijn relatief aan de base van de versie, dus bv. `/v2/order/123`.)
 
 ### Statusflow van een order
 

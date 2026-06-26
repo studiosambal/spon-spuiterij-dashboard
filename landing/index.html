@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SpuitwerkOnline – Spuiter-dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --primary: #0ea5e9;
+        --primary-dark: #0284c7;
+        --text: #0f172a;
+        --muted: #64748b;
+        --border: #e2e8f0;
+        --bg: #f1f5f9;
+        --card: #ffffff;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: 'Fira Sans', system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+      .wrap { width: 100%; max-width: 560px; }
+      .head { text-align: center; margin-bottom: 28px; }
+      .head h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
+      .head p { color: var(--muted); font-size: 15px; margin-top: 6px; }
+      .grid { display: grid; gap: 14px; }
+      .ver {
+        display: flex; align-items: center; gap: 16px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 20px 22px;
+        text-decoration: none;
+        color: inherit;
+        transition: border-color .15s, transform .15s, box-shadow .15s;
+      }
+      .ver:hover {
+        border-color: var(--primary);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(2, 132, 199, 0.12);
+      }
+      .ver .num {
+        flex-shrink: 0;
+        width: 52px; height: 52px;
+        border-radius: 12px;
+        background: var(--primary);
+        color: #fff;
+        font-size: 20px; font-weight: 700;
+        display: flex; align-items: center; justify-content: center;
+      }
+      .ver .body { flex: 1; min-width: 0; }
+      .ver .title { font-size: 17px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+      .ver .sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
+      .ver .arrow { color: var(--muted); font-size: 20px; }
+      .tag {
+        font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+        background: #ecfeff; color: var(--primary-dark);
+        border: 1px solid #bae6fd; border-radius: 6px; padding: 2px 7px;
+      }
+      .foot { text-align: center; color: var(--muted); font-size: 12px; margin-top: 24px; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="head">
+        <h1>SpuitwerkOnline · Spuiter-dashboard</h1>
+        <p>Kies een versie van het ontwerpvoorstel</p>
+      </div>
+      <div class="grid">
+        <a class="ver" href="/v2/">
+          <div class="num">2</div>
+          <div class="body">
+            <div class="title">Versie 2 <span class="tag">Nieuwste</span></div>
+            <div class="sub">Het meest recente voorstel</div>
+          </div>
+          <div class="arrow">→</div>
+        </a>
+        <a class="ver" href="/v1/">
+          <div class="num">1</div>
+          <div class="body">
+            <div class="title">Versie 1</div>
+            <div class="sub">Het eerdere voorstel</div>
+          </div>
+          <div class="arrow">→</div>
+        </a>
+      </div>
+      <div class="foot">Studio Sambal — prototype / ontwerpvoorstel</div>
+    </div>
+  </body>
+</html>

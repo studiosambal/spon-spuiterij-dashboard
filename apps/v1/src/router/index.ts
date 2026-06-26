@@ -1,4 +1,4 @@
-import { createRouter, createWebHashHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 import Dashboard from '@/views/Dashboard.vue'
 import OrderDetail from '@/views/OrderDetail.vue'
 import BevestigOntvangst from '@/views/BevestigOntvangst.vue'
@@ -8,7 +8,7 @@ import Profiel from '@/views/Profiel.vue'
 import Account from '@/views/Account.vue'
 
 const router = createRouter({
-  history: createWebHashHistory(),
+  history: createWebHistory(import.meta.env.BASE_URL),
   scrollBehavior: () => ({ top: 0, behavior: 'instant' }),
   routes: [
     { path: '/', name: 'dashboard', component: Dashboard },

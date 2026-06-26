@@ -4,13 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
+This is the **v1** workspace of an npm-workspaces monorepo (see the root `README.md`). Run commands from the repo root.
+
 ```bash
-npm run dev      # Start dev server at http://localhost:5173 (exposed on all interfaces)
-npm run build    # Type-check (vue-tsc) then build → outputs to public/
-npm run preview  # Preview the production build
+npm run dev:v1   # Start v1 dev server at http://localhost:5173
+npm run build    # Build all versions → dist/ (v1 lands in dist/v1)
 ```
 
-There are no tests configured. TypeScript errors surface via `vue-tsc` during build.
+This app is served under base `/v1/` and builds to `dist/v1`. There are no tests configured.
 
 ## Architecture
 
@@ -36,7 +37,7 @@ bevestigd → (meerwerk_wacht) → ontvangen → in_productie → productie_gere
 
 ### Routing
 
-`src/router/index.ts` uses **hash history** (`createWebHashHistory`), so no server config is needed for the built output in `public/`.
+`src/router/index.ts` uses **history mode** (`createWebHistory(import.meta.env.BASE_URL)`), so routes resolve under the version base (e.g. `/v1/order/123`). Netlify SPA-fallback for deep links is configured in the root `netlify.toml`.
 
 | Route | View |
 |-------|------|
@@ -54,7 +55,7 @@ bevestigd → (meerwerk_wacht) → ontvangen → in_productie → productie_gere
 - **PrimeIcons** for all icons (class `pi pi-*`).
 - **No Tailwind** — all styling is in `src/assets/main.css` using CSS custom properties (`--primary`, `--surface`, `--card`, `--border`, `--muted`, `--radius`, etc.). Views use these global CSS classes (`card`, `badge`, `order-item`, `detail-row`, `bottom-bar`, etc.) — avoid scoped styles.
 - Font: **Fira Sans** (Google Fonts).
-- Build output goes to **`public/`** (not `dist/`), which also contains pre-built static assets.
+- Build output goes to **`dist/v1`** at the repo root (configured in `vite.config.ts`).
 
 ### Language
 
