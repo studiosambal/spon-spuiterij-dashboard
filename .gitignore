@@ -1,0 +1,11 @@
+# Dependencies
+node_modules/
+
+# Editor / OS
+.DS_Store
+*.local
+.vite/
+
+# Logs
+*.log
+npm-debug.log*
