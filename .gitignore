@@ -12,3 +12,6 @@ dist/
 # Logs
 *.log
 npm-debug.log*
+
+# Persoonlijke Claude Code hook-config (absolute paden, niet delen)
+.claude/settings.json

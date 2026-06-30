@@ -4,7 +4,6 @@ import { definePreset } from '@primevue/themes'
 import Lara from '@primevue/themes/lara'
 import Button from 'primevue/button'
 import Tag from 'primevue/tag'
-import Message from 'primevue/message'
 import Checkbox from 'primevue/checkbox'
 import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
@@ -44,7 +43,6 @@ app.use(PrimeVue, {
 
 app.component('PButton', Button)
 app.component('PTag', Tag)
-app.component('PMessage', Message)
 app.component('PCheckbox', Checkbox)
 app.component('PInputText', InputText)
 app.component('PTextarea', Textarea)

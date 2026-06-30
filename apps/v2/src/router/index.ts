@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Dashboard from '@/views/Dashboard.vue'
 import OrderDetail from '@/views/OrderDetail.vue'
-import BevestigOntvangst from '@/views/BevestigOntvangst.vue'
+import Controle from '@/views/Controle.vue'
 import Meerwerk from '@/views/Meerwerk.vue'
 import ProductieFoto from '@/views/ProductieFoto.vue'
 import Profiel from '@/views/Profiel.vue'
@@ -13,7 +13,7 @@ const router = createRouter({
   routes: [
     { path: '/', name: 'dashboard', component: Dashboard },
     { path: '/order/:id', name: 'order', component: OrderDetail },
-    { path: '/order/:id/bevestig', name: 'bevestig', component: BevestigOntvangst },
+    { path: '/order/:id/controle', name: 'controle', component: Controle },
     { path: '/order/:id/meerwerk', name: 'meerwerk', component: Meerwerk },
     { path: '/order/:id/foto/:type', name: 'foto', component: ProductieFoto },
     { path: '/profiel', name: 'profiel', component: Profiel },

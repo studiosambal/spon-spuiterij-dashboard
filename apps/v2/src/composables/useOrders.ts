@@ -2,7 +2,7 @@ import { ref } from 'vue'
 
 export type OrderStatus =
   | 'bevestigd'
-  | 'meerwerk_wacht'    // meerwerk verstuurd, wachten op klant akkoord
+  | 'meerwerk_wacht'    // afwijking gemeld bij SpuitwerkOnline, wacht op akkoord via kantoor
   | 'ontvangen'         // product ingenomen, before-foto nog nodig of al genomen
   | 'in_productie'      // spuiter is gestart met de opdracht
   | 'productie_gereed'  // klaar, wachten op betaling SpuitwerkOnline
@@ -14,11 +14,28 @@ export type Zijdig = '1-zijdig' | '2-zijdig'
 export type Oppervlaktemateriaal = 'verf_lak' | 'kunststof' | 'hout_onbehandeld' | 'metaal'
 export type Oppervlaktestructuur = 'glad' | 'huidige_structuur'
 export type Glansgraad = 'zijde' | 'hoogglans' | 'mat'
-export type KleurMethode = 'ral_ncs' | 'ander_merk' | 'kleurvoorbeeld' | 'zelfde_kleur' | 'later'
+export type KleurMethode = 'ral_ncs' | 'ander_merk' | 'mengverhouding' | 'kleurvoorbeeld' | 'zelfde_kleur' | 'later'
 export type Ophaalmethode = 'klant' | 'vervoerder'
 
 export interface PaneelMaat {
+  // breedte/hoogte in cm. Beide > 0 = vlak (m²), één > 0 = strekkend (m), beide 0 = per stuk
   breedte: number; hoogte: number; aantal: number; omschrijving: string
+}
+
+// Een order kan meerdere diensten bevatten (bijv. binnendeuren én trapleuning).
+// Kleur, glansgraad, materiaal en panelen horen bij de dienst, niet bij de order.
+export interface Dienst {
+  naam: string
+  panelen: PaneelMaat[]
+  zijdig: Zijdig
+  oppervlaktemateriaal: Oppervlaktemateriaal
+  oppervlaktestructuur: Oppervlaktestructuur
+  kleur: string                // korte, leesbare weergave (code, merk+code, of label)
+  kleur_methode: KleurMethode
+  kleur_recept?: string        // vrij mengrecept, alleen bij methode 'mengverhouding'
+  glansgraad: Glansgraad
+  handgreepgaten: boolean
+  handgreepgaten_aantal: number
 }
 
 export interface Order {
@@ -32,7 +49,9 @@ export interface Order {
 
   // Logistiek
   verwacht_levering?: string          // verwachte leverdatum bij de spuiter
-  verwacht_gereed_werkdagen?: number  // aantal werkdagen na inname
+  verwacht_gereed_werkdagen?: number  // aantal werkdagen na inname (standaard 15)
+  verwacht_gereed_datum?: string      // verwachte opleverdatum (weergave), bv. 'do 19 jun'
+  te_laat?: boolean                   // verwachte opleverdatum overschreden zonder actie
 
   // Financieel
   bedrag: number               // orderwaarde voor de spuiter in euros
@@ -40,20 +59,11 @@ export interface Order {
   // Productie tracking
   beforeFotoGemaakt: boolean   // before-foto genomen?
 
-  // Wat wordt gespoten
-  product: string
+  // Wat wordt gespoten — één of meer diensten
+  product: string              // korte samenvatting voor de lijst
   type_service: TypeService
-  spuiten_wat: string
-  panelen: PaneelMaat[]
-  zijdig: Zijdig
-  oppervlaktemateriaal: Oppervlaktemateriaal
-  oppervlaktestructuur: Oppervlaktestructuur
-  handgreepgaten: boolean
-  handgreepgaten_aantal: number
+  diensten: Dienst[]
 
-  kleur: string
-  kleur_methode: KleurMethode
-  glansgraad: Glansgraad
   ophaalmethode: Ophaalmethode
   opmerkingen: string
 }
@@ -63,7 +73,7 @@ export const STATUS_LABELS: Record<OrderStatus, string> = {
   meerwerk_wacht:    'Wacht op akkoord',
   ontvangen:         'Ontvangen',
   in_productie:      'In productie',
-  productie_gereed:  'Productie gereed',
+  productie_gereed:  'Wacht op betaling',
   klaar:             'Klaar voor ophalen',
   afgerond:          'Afgerond'
 }
@@ -83,8 +93,43 @@ export const GLANSGRAAD_LABELS: Record<Glansgraad, string> = {
   zijde: 'Zijdeglans', hoogglans: 'Hoogglans', mat: 'Mat'
 }
 
+export const KLEUR_METHODE_LABELS: Record<KleurMethode, string> = {
+  ral_ncs:        'RAL / NCS',
+  ander_merk:     'Ander merk',
+  mengverhouding: 'Mengverhouding',
+  kleurvoorbeeld: 'Volgens kleurstaal',
+  zelfde_kleur:   'Zelfde kleur',
+  later:          'Nog te bepalen'
+}
+
 export const OPPERVLAK_LABELS: Record<Oppervlaktemateriaal, string> = {
   verf_lak: 'Verf/lak', kunststof: 'Kunststof', hout_onbehandeld: 'Hout onbehandeld', metaal: 'Metaal'
+}
+
+// ── Geometrie: m², strekkende meters en stuks afleiden uit de panelen ──────────
+export interface PaneelTotalen { stuks: number; m2: number; strekkend: number }
+
+export function paneelTotalen(panelen: PaneelMaat[], zijdig: Zijdig): PaneelTotalen {
+  const factor = zijdig === '2-zijdig' ? 2 : 1
+  let m2 = 0, strekkend = 0, stuks = 0
+  for (const p of panelen) {
+    stuks += p.aantal
+    if (p.breedte > 0 && p.hoogte > 0) {
+      m2 += p.aantal * (p.breedte / 100) * (p.hoogte / 100) * factor
+    } else if (p.breedte > 0 || p.hoogte > 0) {
+      strekkend += p.aantal * (Math.max(p.breedte, p.hoogte) / 100)
+    }
+  }
+  return { stuks, m2: Math.round(m2 * 100) / 100, strekkend: Math.round(strekkend * 100) / 100 }
+}
+
+// Korte samenvatting achter de dienstnaam, bv. "20 stuks · 6,2 m²"
+export function dienstHoeveelheid(d: Dienst): string {
+  const t = paneelTotalen(d.panelen, d.zijdig)
+  const delen: string[] = [`${t.stuks} ${t.stuks === 1 ? 'stuk' : 'stuks'}`]
+  if (t.m2 > 0)        delen.push(`${t.m2.toLocaleString('nl-NL')} m²`)
+  if (t.strekkend > 0) delen.push(`${t.strekkend.toLocaleString('nl-NL')} m`)
+  return delen.join(' · ')
 }
 
 const orders = ref<Order[]>([
@@ -94,14 +139,19 @@ const orders = ref<Order[]>([
     status: 'bevestigd', betaald: false, uitbetaald: false, bedrag: 180, beforeFotoGemaakt: false,
     verwacht_levering: 'do 23 mei',
     product: 'Kastdeuren (6 stuks)',
-    type_service: 'alleen_spuitwerk', spuiten_wat: 'Kastdeuren MDF',
-    panelen: [
-      { breedte: 40, hoogte: 80, aantal: 4, omschrijving: 'Kastdeuren groot' },
-      { breedte: 40, hoogte: 40, aantal: 2, omschrijving: 'Kastdeuren klein' },
+    type_service: 'alleen_spuitwerk',
+    diensten: [
+      {
+        naam: 'Kastdeuren MDF',
+        panelen: [
+          { breedte: 40, hoogte: 80, aantal: 4, omschrijving: 'Kastdeuren groot' },
+          { breedte: 40, hoogte: 40, aantal: 2, omschrijving: 'Kastdeuren klein' },
+        ],
+        zijdig: '1-zijdig', oppervlaktemateriaal: 'verf_lak', oppervlaktestructuur: 'glad',
+        kleur: 'Nog te bepalen', kleur_methode: 'later', glansgraad: 'mat',
+        handgreepgaten: false, handgreepgaten_aantal: 0,
+      },
     ],
-    zijdig: '1-zijdig', oppervlaktemateriaal: 'verf_lak', oppervlaktestructuur: 'glad',
-    handgreepgaten: false, handgreepgaten_aantal: 0,
-    kleur: 'Nog te bepalen', kleur_methode: 'later', glansgraad: 'mat',
     ophaalmethode: 'klant',
     opmerkingen: ''
   },
@@ -111,13 +161,18 @@ const orders = ref<Order[]>([
     status: 'bevestigd', betaald: false, uitbetaald: false, bedrag: 95, beforeFotoGemaakt: false,
     verwacht_levering: 'vr 24 mei',
     product: 'Radiator (1 stuk)',
-    type_service: 'alleen_spuitwerk', spuiten_wat: 'Paneelradiator',
-    panelen: [
-      { breedte: 80, hoogte: 60, aantal: 1, omschrijving: 'Paneelradiator' },
+    type_service: 'alleen_spuitwerk',
+    diensten: [
+      {
+        naam: 'Paneelradiator',
+        panelen: [
+          { breedte: 80, hoogte: 60, aantal: 1, omschrijving: 'Paneelradiator' },
+        ],
+        zijdig: '1-zijdig', oppervlaktemateriaal: 'verf_lak', oppervlaktestructuur: 'glad',
+        kleur: 'Kleurstaal meenemen', kleur_methode: 'kleurvoorbeeld', glansgraad: 'zijde',
+        handgreepgaten: false, handgreepgaten_aantal: 0,
+      },
     ],
-    zijdig: '1-zijdig', oppervlaktemateriaal: 'verf_lak', oppervlaktestructuur: 'glad',
-    handgreepgaten: false, handgreepgaten_aantal: 0,
-    kleur: 'Kleurstaal meenemen', kleur_methode: 'kleurvoorbeeld', glansgraad: 'zijde',
     ophaalmethode: 'klant',
     opmerkingen: ''
   },
@@ -127,15 +182,20 @@ const orders = ref<Order[]>([
     status: 'bevestigd', betaald: false, uitbetaald: false, bedrag: 580, beforeFotoGemaakt: false,
     verwacht_levering: 'vr 24 mei',
     product: 'Keukendeuren & ladefronten (20 stuks)',
-    type_service: 'alleen_spuitwerk', spuiten_wat: 'Keukendeuren & ladefronten',
-    panelen: [
-      { breedte: 40, hoogte: 70, aantal: 8,  omschrijving: 'Bovenkastdeuren' },
-      { breedte: 60, hoogte: 70, aantal: 6,  omschrijving: 'Onderkastdeuren' },
-      { breedte: 40, hoogte: 20, aantal: 6,  omschrijving: 'Ladefronten' },
+    type_service: 'alleen_spuitwerk',
+    diensten: [
+      {
+        naam: 'Keukendeuren & ladefronten',
+        panelen: [
+          { breedte: 40, hoogte: 70, aantal: 8,  omschrijving: 'Bovenkastdeuren' },
+          { breedte: 60, hoogte: 70, aantal: 6,  omschrijving: 'Onderkastdeuren' },
+          { breedte: 40, hoogte: 20, aantal: 6,  omschrijving: 'Ladefronten' },
+        ],
+        zijdig: '2-zijdig', oppervlaktemateriaal: 'verf_lak', oppervlaktestructuur: 'glad',
+        kleur: 'RAL 9001 - Gebroken Wit', kleur_methode: 'ral_ncs', glansgraad: 'zijde',
+        handgreepgaten: false, handgreepgaten_aantal: 0,
+      },
     ],
-    zijdig: '2-zijdig', oppervlaktemateriaal: 'verf_lak', oppervlaktestructuur: 'glad',
-    handgreepgaten: false, handgreepgaten_aantal: 0,
-    kleur: 'RAL 9001 - Gebroken Wit', kleur_methode: 'ral_ncs', glansgraad: 'zijde',
     ophaalmethode: 'klant',
     opmerkingen: 'Deuren en lades zijn al gedemonteerd en schoongemaakt aangeleverd'
   },
@@ -144,12 +204,27 @@ const orders = ref<Order[]>([
     klant: 'Sophie Bakker', datum: 'Gisteren', adres: 'Keizersgracht 45, Amsterdam',
     status: 'meerwerk_wacht', betaald: false, uitbetaald: false, bedrag: 420, beforeFotoGemaakt: false,
     verwacht_levering: 'ma 26 mei',
-    product: 'Binnendeuren (5 stuks)',
-    type_service: 'montage_transport', spuiten_wat: 'Deuren & kozijnwerk',
-    panelen: [{ breedte: 83, hoogte: 201, aantal: 5, omschrijving: 'Binnendeuren opdek' }],
-    zijdig: '2-zijdig', oppervlaktemateriaal: 'verf_lak', oppervlaktestructuur: 'glad',
-    handgreepgaten: false, handgreepgaten_aantal: 0,
-    kleur: 'RAL 7016 - Antraciet', kleur_methode: 'ral_ncs', glansgraad: 'mat',
+    product: 'Binnendeuren & trapleuning',
+    type_service: 'montage_transport',
+    diensten: [
+      {
+        naam: 'Binnendeuren',
+        panelen: [{ breedte: 83, hoogte: 201, aantal: 5, omschrijving: 'Binnendeuren opdek' }],
+        zijdig: '2-zijdig', oppervlaktemateriaal: 'verf_lak', oppervlaktestructuur: 'glad',
+        kleur: 'RAL 7016 - Antraciet', kleur_methode: 'ral_ncs', glansgraad: 'mat',
+        handgreepgaten: false, handgreepgaten_aantal: 0,
+      },
+      {
+        naam: 'Trapleuning & spijlen',
+        panelen: [
+          { breedte: 550, hoogte: 0, aantal: 1,  omschrijving: 'Trapleuning' },
+          { breedte: 0,   hoogte: 0, aantal: 24, omschrijving: 'Spijlen' },
+        ],
+        zijdig: '1-zijdig', oppervlaktemateriaal: 'metaal', oppervlaktestructuur: 'glad',
+        kleur: 'RAL 9005 - Zwart Mat', kleur_methode: 'ral_ncs', glansgraad: 'mat',
+        handgreepgaten: false, handgreepgaten_aantal: 0,
+      },
+    ],
     ophaalmethode: 'vervoerder',
     opmerkingen: ''
   },
@@ -157,15 +232,21 @@ const orders = ref<Order[]>([
     id: 'SOL-2025-003',
     klant: 'Marco Pietersen', datum: '2 dagen geleden', adres: 'Binnenhof 8, Den Haag',
     status: 'in_productie', betaald: false, uitbetaald: false, bedrag: 340, beforeFotoGemaakt: true,
+    verwacht_gereed_werkdagen: 15, verwacht_gereed_datum: 'do 19 jun', te_laat: true,
     product: 'Trapleuning + spijlen (volledig)',
-    type_service: 'alleen_spuitwerk', spuiten_wat: 'Trapleuning, aanzet & spijlen',
-    panelen: [
-      { breedte: 0, hoogte: 0, aantal: 1,  omschrijving: 'Trapleuning (ca. 6m)' },
-      { breedte: 0, hoogte: 0, aantal: 28, omschrijving: 'Spijlen (los meegeleverd)' },
+    type_service: 'alleen_spuitwerk',
+    diensten: [
+      {
+        naam: 'Trapleuning, aanzet & spijlen',
+        panelen: [
+          { breedte: 600, hoogte: 0, aantal: 1,  omschrijving: 'Trapleuning' },
+          { breedte: 0,   hoogte: 0, aantal: 28, omschrijving: 'Spijlen (los meegeleverd)' },
+        ],
+        zijdig: '1-zijdig', oppervlaktemateriaal: 'metaal', oppervlaktestructuur: 'glad',
+        kleur: 'RAL 9005 - Zwart Mat', kleur_methode: 'ral_ncs', glansgraad: 'mat',
+        handgreepgaten: false, handgreepgaten_aantal: 0,
+      },
     ],
-    zijdig: '1-zijdig', oppervlaktemateriaal: 'metaal', oppervlaktestructuur: 'glad',
-    handgreepgaten: false, handgreepgaten_aantal: 0,
-    kleur: 'RAL 9005 - Zwart Mat', kleur_methode: 'ral_ncs', glansgraad: 'mat',
     ophaalmethode: 'klant',
     opmerkingen: 'Leuning nog gemonteerd - overleg bij inlevering of demonteren nodig is'
   },
@@ -174,15 +255,21 @@ const orders = ref<Order[]>([
     klant: 'Lisa van den Berg', datum: '3 dagen geleden', adres: 'Lijnbaan 22, Rotterdam',
     status: 'in_productie', betaald: false, uitbetaald: false, bedrag: 260, beforeFotoGemaakt: true,
     product: 'Buffetkast - deuren & zijwanden (8 stuks)',
-    type_service: 'alleen_spuitwerk', spuiten_wat: 'Kastdeuren & zijwanden',
-    panelen: [
-      { breedte: 45, hoogte: 90,  aantal: 4, omschrijving: 'Kastdeuren (MDF)' },
-      { breedte: 45, hoogte: 180, aantal: 2, omschrijving: 'Zijwanden' },
-      { breedte: 45, hoogte: 20,  aantal: 2, omschrijving: 'Tussenplanken (zichtbaar)' },
+    type_service: 'alleen_spuitwerk',
+    diensten: [
+      {
+        naam: 'Kastdeuren & zijwanden',
+        panelen: [
+          { breedte: 45, hoogte: 90,  aantal: 4, omschrijving: 'Kastdeuren (MDF)' },
+          { breedte: 45, hoogte: 180, aantal: 2, omschrijving: 'Zijwanden' },
+          { breedte: 45, hoogte: 20,  aantal: 2, omschrijving: 'Tussenplanken (zichtbaar)' },
+        ],
+        zijdig: '1-zijdig', oppervlaktemateriaal: 'verf_lak', oppervlaktestructuur: 'glad',
+        kleur: 'Saliegroen (mengkleur)', kleur_methode: 'mengverhouding',
+        kleur_recept: 'Sikkens basis WN · +12% RAL 6021 · +3% zwart 9005', glansgraad: 'zijde',
+        handgreepgaten: false, handgreepgaten_aantal: 0,
+      },
     ],
-    zijdig: '1-zijdig', oppervlaktemateriaal: 'verf_lak', oppervlaktestructuur: 'glad',
-    handgreepgaten: false, handgreepgaten_aantal: 0,
-    kleur: 'RAL 6021 - Saliegroen', kleur_methode: 'ral_ncs', glansgraad: 'zijde',
     ophaalmethode: 'klant',
     opmerkingen: ''
   },
@@ -191,16 +278,21 @@ const orders = ref<Order[]>([
     klant: 'Peter Smit', datum: 'Vandaag', adres: 'Kalverstraat 88, Amsterdam',
     status: 'productie_gereed', betaald: false, uitbetaald: false, bedrag: 720, beforeFotoGemaakt: true,
     product: 'Keukendeuren & ladefronten incl. handgreepgaten (24 stuks)',
-    type_service: 'alleen_spuitwerk', spuiten_wat: 'Keukendeuren, ladefronten & plinten',
-    panelen: [
-      { breedte: 60, hoogte: 72, aantal: 10, omschrijving: 'Onderkastdeuren' },
-      { breedte: 30, hoogte: 72, aantal: 4,  omschrijving: 'Smalle onderkastdeuren' },
-      { breedte: 60, hoogte: 35, aantal: 6,  omschrijving: 'Ladefronten' },
-      { breedte: 60, hoogte: 15, aantal: 4,  omschrijving: 'Plinten' },
+    type_service: 'alleen_spuitwerk',
+    diensten: [
+      {
+        naam: 'Keukendeuren, ladefronten & plinten',
+        panelen: [
+          { breedte: 60, hoogte: 72, aantal: 10, omschrijving: 'Onderkastdeuren' },
+          { breedte: 30, hoogte: 72, aantal: 4,  omschrijving: 'Smalle onderkastdeuren' },
+          { breedte: 60, hoogte: 35, aantal: 6,  omschrijving: 'Ladefronten' },
+          { breedte: 60, hoogte: 15, aantal: 4,  omschrijving: 'Plinten' },
+        ],
+        zijdig: '1-zijdig', oppervlaktemateriaal: 'kunststof', oppervlaktestructuur: 'huidige_structuur',
+        kleur: 'Sikkens BN.00.86', kleur_methode: 'ander_merk', glansgraad: 'hoogglans',
+        handgreepgaten: true, handgreepgaten_aantal: 14,
+      },
     ],
-    zijdig: '1-zijdig', oppervlaktemateriaal: 'kunststof', oppervlaktestructuur: 'huidige_structuur',
-    handgreepgaten: true, handgreepgaten_aantal: 14,
-    kleur: 'BN.00.86 - Sikkens', kleur_methode: 'ral_ncs', glansgraad: 'hoogglans',
     ophaalmethode: 'vervoerder',
     opmerkingen: 'Kunststof deuren, huidige structuur behouden. Handgreepgaten herstellen op 14 panelen.'
   },
@@ -209,11 +301,16 @@ const orders = ref<Order[]>([
     klant: 'Roos Hendriks', datum: '4 dagen geleden', adres: 'Haagse Bluf 3, Utrecht',
     status: 'klaar', betaald: true, uitbetaald: false, bedrag: 140, beforeFotoGemaakt: true,
     product: 'Radiatoren (2 stuks)',
-    type_service: 'alleen_spuitwerk', spuiten_wat: 'Radiatoren',
-    panelen: [{ breedte: 60, hoogte: 90, aantal: 2, omschrijving: 'Paneelradiatoren (Stelrad Compact)' }],
-    zijdig: '1-zijdig', oppervlaktemateriaal: 'metaal', oppervlaktestructuur: 'glad',
-    handgreepgaten: false, handgreepgaten_aantal: 0,
-    kleur: 'RAL 9002 - Grijswit', kleur_methode: 'ral_ncs', glansgraad: 'zijde',
+    type_service: 'alleen_spuitwerk',
+    diensten: [
+      {
+        naam: 'Radiatoren',
+        panelen: [{ breedte: 60, hoogte: 90, aantal: 2, omschrijving: 'Paneelradiatoren (Stelrad Compact)' }],
+        zijdig: '1-zijdig', oppervlaktemateriaal: 'metaal', oppervlaktestructuur: 'glad',
+        kleur: 'RAL 9002 - Grijswit', kleur_methode: 'ral_ncs', glansgraad: 'zijde',
+        handgreepgaten: false, handgreepgaten_aantal: 0,
+      },
+    ],
     ophaalmethode: 'klant',
     opmerkingen: ''
   },
@@ -223,11 +320,16 @@ const orders = ref<Order[]>([
     klant: 'Dirk Jansen', datum: '1 week geleden', adres: 'Molenstraat 7, Haarlem',
     status: 'afgerond', betaald: true, uitbetaald: true, bedrag: 380, beforeFotoGemaakt: true,
     product: 'Keukendeuren (12 stuks)',
-    type_service: 'alleen_spuitwerk', spuiten_wat: 'Keukendeuren',
-    panelen: [{ breedte: 50, hoogte: 70, aantal: 12, omschrijving: 'Keukendeuren' }],
-    zijdig: '1-zijdig', oppervlaktemateriaal: 'verf_lak', oppervlaktestructuur: 'glad',
-    handgreepgaten: false, handgreepgaten_aantal: 0,
-    kleur: 'RAL 9005 - Zwart Mat', kleur_methode: 'ral_ncs', glansgraad: 'mat',
+    type_service: 'alleen_spuitwerk',
+    diensten: [
+      {
+        naam: 'Keukendeuren',
+        panelen: [{ breedte: 50, hoogte: 70, aantal: 12, omschrijving: 'Keukendeuren' }],
+        zijdig: '1-zijdig', oppervlaktemateriaal: 'verf_lak', oppervlaktestructuur: 'glad',
+        kleur: 'RAL 9005 - Zwart Mat', kleur_methode: 'ral_ncs', glansgraad: 'mat',
+        handgreepgaten: false, handgreepgaten_aantal: 0,
+      },
+    ],
     ophaalmethode: 'klant',
     opmerkingen: ''
   },
@@ -236,11 +338,16 @@ const orders = ref<Order[]>([
     klant: 'Anouk Visser', datum: '10 dagen geleden', adres: 'Prins Hendrikstraat 19, Utrecht',
     status: 'afgerond', betaald: true, uitbetaald: false, bedrag: 195, beforeFotoGemaakt: true,
     product: 'Binnendeuren (3 stuks)',
-    type_service: 'alleen_spuitwerk', spuiten_wat: 'Binnendeuren',
-    panelen: [{ breedte: 83, hoogte: 201, aantal: 3, omschrijving: 'Binnendeuren' }],
-    zijdig: '2-zijdig', oppervlaktemateriaal: 'verf_lak', oppervlaktestructuur: 'glad',
-    handgreepgaten: false, handgreepgaten_aantal: 0,
-    kleur: 'RAL 9003 - Wit Glans', kleur_methode: 'ral_ncs', glansgraad: 'hoogglans',
+    type_service: 'alleen_spuitwerk',
+    diensten: [
+      {
+        naam: 'Binnendeuren',
+        panelen: [{ breedte: 83, hoogte: 201, aantal: 3, omschrijving: 'Binnendeuren' }],
+        zijdig: '2-zijdig', oppervlaktemateriaal: 'verf_lak', oppervlaktestructuur: 'glad',
+        kleur: 'RAL 9003 - Wit Glans', kleur_methode: 'ral_ncs', glansgraad: 'hoogglans',
+        handgreepgaten: false, handgreepgaten_aantal: 0,
+      },
+    ],
     ophaalmethode: 'klant',
     opmerkingen: ''
   },
@@ -249,11 +356,19 @@ const orders = ref<Order[]>([
     klant: 'Tom de Boer', datum: '2 weken geleden', adres: 'Velperweg 44, Arnhem',
     status: 'afgerond', betaald: true, uitbetaald: false, bedrag: 310, beforeFotoGemaakt: true,
     product: 'Trapleuning (volledig)',
-    type_service: 'alleen_spuitwerk', spuiten_wat: 'Trapleuning & spijlen',
-    panelen: [{ breedte: 0, hoogte: 0, aantal: 1, omschrijving: 'Trapleuning + 22 spijlen' }],
-    zijdig: '1-zijdig', oppervlaktemateriaal: 'verf_lak', oppervlaktestructuur: 'glad',
-    handgreepgaten: false, handgreepgaten_aantal: 0,
-    kleur: 'RAL 7016 - Antraciet', kleur_methode: 'ral_ncs', glansgraad: 'zijde',
+    type_service: 'alleen_spuitwerk',
+    diensten: [
+      {
+        naam: 'Trapleuning & spijlen',
+        panelen: [
+          { breedte: 480, hoogte: 0, aantal: 1,  omschrijving: 'Trapleuning' },
+          { breedte: 0,   hoogte: 0, aantal: 22, omschrijving: 'Spijlen' },
+        ],
+        zijdig: '1-zijdig', oppervlaktemateriaal: 'verf_lak', oppervlaktestructuur: 'glad',
+        kleur: 'RAL 7016 - Antraciet', kleur_methode: 'ral_ncs', glansgraad: 'zijde',
+        handgreepgaten: false, handgreepgaten_aantal: 0,
+      },
+    ],
     ophaalmethode: 'vervoerder',
     opmerkingen: ''
   }
@@ -268,11 +383,13 @@ export function useOrders() {
     if (o) o.status = status
   }
   function markBeforeFoto(id: string) {
+    // De foto bij ontvangst is de daadwerkelijke aanname van de goederen:
+    // bevestigd → ontvangen. De controle (kleur/maten) is een aparte stap erna.
     const o = orders.value.find(o => o.id === id)
     if (o) {
       o.beforeFotoGemaakt = true
-      if (o.status === 'ontvangen') {
-        o.status = 'in_productie'
+      if (o.status === 'bevestigd') {
+        o.status = 'ontvangen'
       }
     }
   }
@@ -280,9 +397,14 @@ export function useOrders() {
     const o = orders.value.find(o => o.id === id)
     if (o) o.verwacht_gereed_werkdagen = dagen
   }
-  function updateKleur(id: string, kleur: string) {
+  function updateKleur(id: string, dienstIndex: number, payload: { kleur: string; methode: KleurMethode; recept?: string }) {
     const o = orders.value.find(o => o.id === id)
-    if (o) { o.kleur = kleur; o.kleur_methode = 'ral_ncs' }
+    const d = o?.diensten[dienstIndex]
+    if (d) {
+      d.kleur = payload.kleur
+      d.kleur_methode = payload.methode
+      d.kleur_recept = payload.methode === 'mengverhouding' ? payload.recept : undefined
+    }
   }
   return { orders, getOrder, updateStatus, markBeforeFoto, updateKleur, updateVerwachtGereed }
 }

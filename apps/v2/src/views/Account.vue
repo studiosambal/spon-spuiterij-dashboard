@@ -42,8 +42,10 @@
             <div class="label" style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)">Wachtwoord</div>
             <div class="value" style="font-size:15px">••••••••</div>
           </div>
-          <i class="pi pi-chevron-down"
-             :style="{ color:'var(--muted)', fontSize:'13px', transition:'transform .2s', transform: toonWachtwoord ? 'rotate(180deg)' : 'none' }" />
+          <span style="display:flex;align-items:center;gap:6px;color:var(--primary);font-weight:600;font-size:14px">
+            Wijzigen
+            <i class="pi" :class="toonWachtwoord ? 'pi-chevron-up' : 'pi-chevron-down'" style="font-size:12px" />
+          </span>
         </div>
 
         <div v-if="toonWachtwoord" style="padding:0 16px 16px;display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--border)">

@@ -14,8 +14,8 @@
       <div class="alert alert-info">
         <strong>{{ isBefore ? 'Foto bij ontvangst' : 'Opleverfoto' }}</strong>
         {{ isBefore
-          ? 'Fotografeer het product vanuit meerdere hoeken. Dit is je bewijs van de begintoestand.'
-          : 'Fotografeer het afgewerkte product vanuit meerdere hoeken. Dit beschermt je bij schademeldingen achteraf.' }}
+          ? 'Maak foto\'s van alle kanten. Je bewijs van hoe het binnenkwam.'
+          : 'Fotografeer het afgewerkte product van alle kanten. Beschermt je bij latere schademeldingen.' }}
       </div>
 
       <!-- Verborgen camera-input -->
@@ -32,12 +32,17 @@
       <div v-if="capturedCount > 0" class="photo-grid">
         <div v-for="(photo, i) in photos" :key="i"
              class="photo-thumb captured"
+             style="position:relative"
              @click="verwijderFoto(i)"
              :aria-label="`Foto ${i + 1} verwijderen`"
              role="button">
-          <i class="pi pi-check" style="font-size:22px" />
+          <i class="pi pi-times-circle" style="position:absolute;top:4px;right:4px;font-size:20px;color:#dc2626;background:#fff;border-radius:50%" />
+          <i class="pi pi-image" style="font-size:22px" />
           <span class="photo-thumb-label">Foto {{ i + 1 }}</span>
         </div>
+      </div>
+      <div v-if="capturedCount > 0" style="font-size:12px;color:var(--muted);margin-top:6px;text-align:center">
+        Tik op een foto om te verwijderen
       </div>
 
       <!-- Foto maken knop — prominent, altijd zichtbaar -->
@@ -49,7 +54,7 @@
         </div>
         <div style="font-size:15px;font-weight:700;color:var(--text)">Foto maken</div>
         <div style="font-size:13px;color:var(--muted)">
-          {{ capturedCount === 0 ? 'Minimaal 1 foto vereist' : `${capturedCount} foto${capturedCount === 1 ? '' : '\'s'} gemaakt — tik om er meer toe te voegen` }}
+          {{ capturedCount === 0 ? 'Minimaal 1 foto vereist' : `${capturedCount} foto${capturedCount === 1 ? '' : '\'s'} gemaakt, tik voor meer` }}
         </div>
       </button>
 
@@ -58,7 +63,7 @@
     <div class="bottom-bar">
       <PButton
         :disabled="capturedCount === 0"
-        :label="isBefore ? 'Opslaan en productie starten' : 'Opslaan en afronden'"
+        :label="isBefore ? 'Foto opslaan' : 'Opslaan'"
         icon="pi pi-check-circle"
         @click="bevestig" />
     </div>
@@ -72,23 +77,26 @@
       </div>
 
       <div style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:8px">
-        {{ isBefore ? 'Foto\'s opgeslagen' : 'Productie afgerond' }}
+        {{ isBefore ? 'Foto opgeslagen' : 'Productie afgerond' }}
       </div>
       <div style="font-size:15px;color:var(--muted);line-height:1.5">
         {{ capturedCount }} foto{{ capturedCount === 1 ? '' : '\'s' }} vastgelegd voor {{ order?.klant }}
       </div>
 
-      <PMessage v-if="!isBefore" severity="info" :closable="false"
-                style="border-radius:var(--radius);font-size:14px;width:100%;margin-top:24px">
-        <strong style="display:block;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">Volgende stap</strong>
-        Betaling wordt verwerkt door SpuitwerkOnline. Klant ontvangt ophaalmelding.
-      </PMessage>
+      <div v-if="isBefore" class="alert alert-info" style="width:100%;margin-top:24px;text-align:left">
+        <strong>Bewaard als bewijs</strong>
+        Vastgelegd hoe het binnenkwam. Kijk kleur en maten na bij de start van het spuitwerk.
+      </div>
+      <div v-else class="alert alert-info" style="width:100%;margin-top:24px;text-align:left">
+        <strong>Volgende stap</strong>
+        SpuitwerkOnline verwerkt de betaling. De klant krijgt een ophaalmelding.
+      </div>
     </div>
 
     <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
       <PButton label="Naar order" icon="pi pi-arrow-right"
                @click="router.push('/order/' + route.params.id)" />
-      <PButton label="Terug naar overzicht" icon="pi pi-home" outlined
+      <PButton label="Naar overzicht" icon="pi pi-home" outlined
                @click="router.push('/')" />
     </div>
   </div>
@@ -133,8 +141,7 @@ function verwijderFoto(i: number) {
 function bevestig() {
   const id = route.params.id as string
   if (isBefore.value) {
-    markBeforeFoto(id)
-    updateStatus(id, 'in_productie')
+    markBeforeFoto(id)   // foto bij ontvangst: bevestigd → ontvangen
   } else {
     updateStatus(id, 'productie_gereed')
   }

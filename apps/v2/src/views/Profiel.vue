@@ -4,16 +4,8 @@
       <button class="back-btn" @click="router.back()">
         <i class="pi pi-arrow-left" /> Terug
       </button>
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <div>
-          <h1>{{ spuiter.naam }}</h1>
-          <div class="subtitle">{{ spuiter.bedrijf }}</div>
-        </div>
-        <button style="background:none;border:none;cursor:pointer;padding:6px;color:var(--muted);display:flex;align-items:center"
-                @click="router.push('/account')">
-          <i class="pi pi-cog" style="font-size:22px" />
-        </button>
-      </div>
+      <h1>{{ spuiter.naam }}</h1>
+      <div class="subtitle">{{ spuiter.bedrijf }}</div>
     </header>
 
     <main class="page-content">
@@ -102,12 +94,13 @@
       </template>
 
 
-      <div class="section-label">Sessie</div>
+      <div class="section-label">Account</div>
       <div class="card" style="padding:0;overflow:hidden">
-        <button style="width:100%;display:flex;align-items:center;gap:12px;padding:16px;background:none;border:none;cursor:pointer;font-family:inherit;text-align:left;color:#dc2626"
-                @click="router.push('/')">
-          <i class="pi pi-sign-out" style="font-size:18px" />
-          <span style="font-size:15px;font-weight:600">Uitloggen</span>
+        <button style="width:100%;display:flex;align-items:center;gap:12px;padding:16px;background:none;border:none;cursor:pointer;font-family:inherit;text-align:left"
+                @click="router.push('/account')">
+          <i class="pi pi-cog" style="font-size:18px;color:var(--muted)" />
+          <span style="flex:1;font-size:15px;font-weight:600;color:var(--text)">Accountinstellingen</span>
+          <i class="pi pi-chevron-right" style="font-size:14px;color:var(--muted)" />
         </button>
       </div>
 
