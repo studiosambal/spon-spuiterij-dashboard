@@ -2,10 +2,10 @@
   <div v-if="!done">
     <header class="app-header">
       <button class="back-btn" @click="router.back()">
-        <i class="pi pi-arrow-left" /> Terug
+        <i class="ti ti-arrow-left" /> Terug
       </button>
       <h1>{{ isBefore ? 'Foto bij ontvangst' : 'Opleverfoto' }}</h1>
-      <div class="subtitle">{{ order?.klant }} &middot; <span style="font-family:monospace">{{ order?.id }}</span></div>
+      <div class="subtitle">{{ klantPlaats(order) }} &middot; <span style="font-family:monospace">{{ order?.id }}</span></div>
     </header>
 
     <main class="page-content" style="padding-bottom:100px">
@@ -36,8 +36,8 @@
              @click="verwijderFoto(i)"
              :aria-label="`Foto ${i + 1} verwijderen`"
              role="button">
-          <i class="pi pi-times-circle" style="position:absolute;top:4px;right:4px;font-size:20px;color:#dc2626;background:#fff;border-radius:50%" />
-          <i class="pi pi-image" style="font-size:22px" />
+          <i class="ti ti-circle-x" style="position:absolute;top:4px;right:4px;font-size:20px;color:#dc2626;background:#fff;border-radius:50%" />
+          <i class="ti ti-photo" style="font-size:22px" />
           <span class="photo-thumb-label">Foto {{ i + 1 }}</span>
         </div>
       </div>
@@ -50,7 +50,7 @@
         style="width:100%;background:#f1f5f9;border:2px dashed var(--border);border-radius:12px;padding:24px 16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;font-family:inherit;transition:background .15s,border-color .15s"
         @click="maakFoto">
         <div style="width:56px;height:56px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center">
-          <i class="pi pi-camera" style="font-size:24px;color:#fff" />
+          <i class="ti ti-camera" style="font-size:24px;color:#fff" />
         </div>
         <div style="font-size:15px;font-weight:700;color:var(--text)">Foto maken</div>
         <div style="font-size:13px;color:var(--muted)">
@@ -64,7 +64,7 @@
       <PButton
         :disabled="capturedCount === 0"
         :label="isBefore ? 'Foto opslaan' : 'Opslaan'"
-        icon="pi pi-check-circle"
+        icon="ti ti-circle-check"
         @click="bevestig" />
     </div>
   </div>
@@ -73,7 +73,7 @@
     <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px;text-align:center">
 
       <div style="width:80px;height:80px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;margin-bottom:20px">
-        <i class="pi pi-camera" style="font-size:36px;color:#fff" />
+        <i class="ti ti-camera" style="font-size:36px;color:#fff" />
       </div>
 
       <div style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:8px">
@@ -85,7 +85,7 @@
 
       <div v-if="isBefore" class="alert alert-info" style="width:100%;margin-top:24px;text-align:left">
         <strong>Bewaard als bewijs</strong>
-        Vastgelegd hoe het binnenkwam. Kijk kleur en maten na bij de start van het spuitwerk.
+        Vastgelegd hoe het binnenkwam — sterk bewijs als er later schade wordt geclaimd.
       </div>
       <div v-else class="alert alert-info" style="width:100%;margin-top:24px;text-align:left">
         <strong>Volgende stap</strong>
@@ -94,9 +94,9 @@
     </div>
 
     <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
-      <PButton label="Naar order" icon="pi pi-arrow-right"
+      <PButton label="Naar order" icon="ti ti-arrow-right"
                @click="router.push('/order/' + route.params.id)" />
-      <PButton label="Naar overzicht" icon="pi pi-home" outlined
+      <PButton label="Naar overzicht" icon="ti ti-home" outlined
                @click="router.push('/')" />
     </div>
   </div>
@@ -105,7 +105,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useOrders } from '@/composables/useOrders'
+import { useOrders, klantPlaats } from '@/composables/useOrders'
 
 const router = useRouter()
 const route  = useRoute()

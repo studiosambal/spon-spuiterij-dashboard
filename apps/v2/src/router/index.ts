@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Dashboard from '@/views/Dashboard.vue'
 import OrderDetail from '@/views/OrderDetail.vue'
+import Ontvangst from '@/views/Ontvangst.vue'
 import Controle from '@/views/Controle.vue'
 import Meerwerk from '@/views/Meerwerk.vue'
 import ProductieFoto from '@/views/ProductieFoto.vue'
@@ -13,6 +14,7 @@ const router = createRouter({
   routes: [
     { path: '/', name: 'dashboard', component: Dashboard },
     { path: '/order/:id', name: 'order', component: OrderDetail },
+    { path: '/order/:id/ontvangst', name: 'ontvangst', component: Ontvangst },
     { path: '/order/:id/controle', name: 'controle', component: Controle },
     { path: '/order/:id/meerwerk', name: 'meerwerk', component: Meerwerk },
     { path: '/order/:id/foto/:type', name: 'foto', component: ProductieFoto },

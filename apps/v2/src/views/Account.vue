@@ -2,7 +2,7 @@
   <div>
     <header class="app-header">
       <button class="back-btn" @click="router.back()">
-        <i class="pi pi-arrow-left" /> Terug
+        <i class="ti ti-arrow-left" /> Terug
       </button>
       <h1>Accountgegevens</h1>
       <div class="subtitle">{{ spuiter.bedrijf }}</div>
@@ -44,7 +44,7 @@
           </div>
           <span style="display:flex;align-items:center;gap:6px;color:var(--primary);font-weight:600;font-size:14px">
             Wijzigen
-            <i class="pi" :class="toonWachtwoord ? 'pi-chevron-up' : 'pi-chevron-down'" style="font-size:12px" />
+            <i :class="toonWachtwoord ? 'ti ti-chevron-up' : 'ti ti-chevron-down'" style="font-size:12px" />
           </span>
         </div>
 
@@ -64,7 +64,7 @@
             <PInputText type="password" v-model="herhaal" placeholder="Minimaal 8 tekens"
                         style="width:100%;font-size:15px;height:48px" />
           </div>
-          <PButton label="Wachtwoord opslaan" icon="pi pi-check"
+          <PButton label="Wachtwoord opslaan" icon="ti ti-check"
                    :disabled="!huidig || !nieuw || nieuw !== herhaal" />
           <div v-if="nieuw && herhaal && nieuw !== herhaal"
                style="font-size:13px;color:#dc2626;text-align:center">
@@ -78,7 +78,7 @@
       <div class="card" style="padding:0;overflow:hidden">
         <button style="width:100%;display:flex;align-items:center;gap:12px;padding:16px;background:none;border:none;cursor:pointer;font-family:inherit;text-align:left;color:#dc2626"
                 @click="uitloggen">
-          <i class="pi pi-sign-out" style="font-size:18px" />
+          <i class="ti ti-logout" style="font-size:18px" />
           <span style="font-size:15px;font-weight:600">Uitloggen</span>
         </button>
       </div>

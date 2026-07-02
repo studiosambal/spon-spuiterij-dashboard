@@ -2,7 +2,7 @@
   <div>
     <header class="app-header">
       <button class="back-btn" @click="router.back()">
-        <i class="pi pi-arrow-left" /> Terug
+        <i class="ti ti-arrow-left" /> Terug
       </button>
       <h1>{{ spuiter.naam }}</h1>
       <div class="subtitle">{{ spuiter.bedrijf }}</div>
@@ -19,7 +19,7 @@
           <div style="font-size:32px;font-weight:700;color:var(--text);line-height:1">{{ actieveOrders }}</div>
           <div style="font-size:13px;color:var(--muted);margin-top:4px;display:flex;align-items:center;justify-content:space-between">
             <span>in behandeling</span>
-            <i class="pi pi-arrow-right" style="color:var(--primary);font-size:12px" />
+            <i class="ti ti-arrow-right" style="color:var(--primary);font-size:12px" />
           </div>
         </div>
 
@@ -29,7 +29,7 @@
           <div style="font-size:32px;font-weight:700;color:var(--text);line-height:1">{{ afgerondOrders }}</div>
           <div style="font-size:13px;color:var(--muted);margin-top:4px;display:flex;align-items:center;justify-content:space-between">
             <span>totaal</span>
-            <i class="pi pi-arrow-right" style="color:var(--primary);font-size:12px" />
+            <i class="ti ti-arrow-right" style="color:var(--primary);font-size:12px" />
           </div>
         </div>
 
@@ -52,11 +52,14 @@
         <div class="section-label">Wacht op uitbetaling ({{ teOntvangenUitbetaling.length }})</div>
         <div class="card" style="padding:0;overflow:hidden">
           <div v-for="(order, i) in teOntvangenUitbetaling" :key="order.id"
-               style="display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer"
+               style="display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer"
                :style="i < teOntvangenUitbetaling.length - 1 ? { borderBottom: '1px solid var(--border)' } : {}"
                @click="router.push('/order/' + order.id)">
+            <div class="oc-thumb">
+              <img :src="dienstImage(order.product)" :alt="order.product" />
+            </div>
             <div style="flex:1;min-width:0">
-              <div style="font-weight:600;font-size:15px;color:var(--text)">{{ order.klant }}</div>
+              <div style="font-weight:600;font-size:15px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ klantPlaats(order) }}</div>
               <div style="font-size:13px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ order.product }}</div>
               <div style="font-size:12px;color:var(--muted);margin-top:2px">{{ order.datum }}</div>
             </div>
@@ -64,7 +67,6 @@
               <div style="font-size:17px;font-weight:700;color:#92400e">{{ formatEuro(order.bedrag) }}</div>
               <div style="font-size:11px;color:#a16207;margin-top:2px">tegoed</div>
             </div>
-            <i class="pi pi-chevron-right" style="color:#cbd5e1;font-size:13px;flex-shrink:0" />
           </div>
         </div>
       </template>
@@ -74,21 +76,23 @@
         <div class="section-label">Recent uitbetaald</div>
         <div class="card" style="padding:0;overflow:hidden">
           <div v-for="(order, i) in recentUitbetaald" :key="order.id"
-               style="display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer"
+               style="display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer"
                :style="i < recentUitbetaald.length - 1 ? { borderBottom: '1px solid var(--border)' } : {}"
                @click="router.push('/order/' + order.id)">
+            <div class="oc-thumb">
+              <img :src="dienstImage(order.product)" :alt="order.product" />
+            </div>
             <div style="flex:1;min-width:0">
-              <div style="font-weight:600;font-size:15px;color:var(--text)">{{ order.klant }}</div>
+              <div style="font-weight:600;font-size:15px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ klantPlaats(order) }}</div>
               <div style="font-size:13px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ order.product }}</div>
               <div style="font-size:12px;color:var(--muted);margin-top:2px">{{ order.datum }}</div>
             </div>
             <div style="text-align:right;flex-shrink:0">
               <div style="font-size:17px;font-weight:700;color:#15803d">{{ formatEuro(order.bedrag) }}</div>
               <div style="font-size:11px;color:#16a34a;margin-top:2px;display:flex;align-items:center;gap:3px;justify-content:flex-end">
-                <i class="pi pi-check" style="font-size:10px" /> uitbetaald
+                <i class="ti ti-check" style="font-size:10px" /> uitbetaald
               </div>
             </div>
-            <i class="pi pi-chevron-right" style="color:#cbd5e1;font-size:13px;flex-shrink:0" />
           </div>
         </div>
       </template>
@@ -98,9 +102,9 @@
       <div class="card" style="padding:0;overflow:hidden">
         <button style="width:100%;display:flex;align-items:center;gap:12px;padding:16px;background:none;border:none;cursor:pointer;font-family:inherit;text-align:left"
                 @click="router.push('/account')">
-          <i class="pi pi-cog" style="font-size:18px;color:var(--muted)" />
+          <i class="ti ti-settings" style="font-size:18px;color:var(--muted)" />
           <span style="flex:1;font-size:15px;font-weight:600;color:var(--text)">Accountinstellingen</span>
-          <i class="pi pi-chevron-right" style="font-size:14px;color:var(--muted)" />
+          <i class="ti ti-chevron-right" style="font-size:14px;color:var(--muted)" />
         </button>
       </div>
 
@@ -111,8 +115,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { useOrders } from '@/composables/useOrders'
+import { useOrders, klantPlaats } from '@/composables/useOrders'
 import { useAuth } from '@/composables/useAuth'
+import { dienstImage } from '@/lib/dienstImage'
 
 const router = useRouter()
 const { orders } = useOrders()

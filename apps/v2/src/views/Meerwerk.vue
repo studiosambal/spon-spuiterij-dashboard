@@ -3,18 +3,17 @@
   <div v-if="fase === 'invoer'">
     <header class="app-header">
       <button class="back-btn" @click="router.back()">
-        <i class="pi pi-arrow-left" /> Terug
+        <i class="ti ti-arrow-left" /> Terug
       </button>
       <h1>Afwijking melden</h1>
-      <div class="subtitle">{{ order?.klant }} &middot; <span style="font-family:monospace">{{ order?.id }}</span></div>
+      <div class="subtitle">{{ klantPlaats(order) }} &middot; <span style="font-family:monospace">{{ order?.id }}</span></div>
     </header>
 
     <main class="page-content" style="padding-bottom:100px">
 
       <!-- Hoe het werkt -->
       <div class="alert alert-info">
-        <strong>Loopt via SpuitwerkOnline</strong>
-        SpuitwerkOnline neemt contact op met de klant voor akkoord op het meerwerk. Je krijgt bericht zodra je verder kunt.
+		Is er meerwerk nodig of wijkt iets af van de bestelling? Meld het hier. SpuitwerkOnline neemt contact op met de klant voor akkoord. Je krijgt bericht zodra je verder kunt.
       </div>
 
       <!-- Open invoerveld — de kern van de melding -->
@@ -84,7 +83,7 @@
 
           <button style="width:100%;border:1.5px dashed var(--border);background:none;border-radius:8px;padding:10px;font-size:14px;font-weight:600;color:var(--primary);cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"
                   @click="extraPanelen.push({ aantal:'1', breedte:'', hoogte:'', omschrijving:'' })">
-            <i class="pi pi-plus" /> Paneel toevoegen
+            <i class="ti ti-plus" /> Paneel toevoegen
           </button>
 
           <!-- Indicatie meerkosten (definitief bedrag bepaalt SpuitwerkOnline met de klant) -->
@@ -116,7 +115,7 @@
     </main>
 
     <div class="bottom-bar">
-      <PButton label="Melden bij SpuitwerkOnline" icon="pi pi-send"
+      <PButton label="Melden bij SpuitwerkOnline" icon="ti ti-send"
                :disabled="!kanMelden" @click="meld" />
       <div v-if="!kanMelden" style="text-align:center;font-size:12px;color:var(--muted);margin-top:2px">
         Beschrijf eerst kort wat er afwijkt
@@ -128,7 +127,7 @@
   <div v-else style="min-height:100dvh;display:flex;flex-direction:column">
     <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px;text-align:center">
       <div style="width:80px;height:80px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;margin-bottom:20px">
-        <i class="pi pi-send" style="font-size:36px;color:#fff" />
+        <i class="ti ti-send" style="font-size:36px;color:#fff" />
       </div>
       <div style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:8px">Gemeld bij SpuitwerkOnline</div>
       <div style="font-size:15px;color:var(--muted);line-height:1.5;max-width:300px">
@@ -154,9 +153,9 @@
       </div>
     </div>
     <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
-      <PButton label="Naar order" icon="pi pi-arrow-right"
+      <PButton label="Naar order" icon="ti ti-arrow-right"
                @click="router.push('/order/' + route.params.id)" />
-      <PButton label="Naar overzicht" icon="pi pi-home" outlined
+      <PButton label="Naar overzicht" icon="ti ti-home" outlined
                @click="router.push('/')" />
     </div>
   </div>
@@ -165,7 +164,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useOrders } from '@/composables/useOrders'
+import { useOrders, klantPlaats } from '@/composables/useOrders'
 
 const router = useRouter()
 const route  = useRoute()
@@ -177,9 +176,9 @@ const fase = ref<Fase>('invoer')
 
 // ── Categorieën (optioneel, helpt SpuitwerkOnline standaardiseren) ──
 const types = [
-  { id: 'maten',  label: 'Maten / aantallen wijken af', desc: 'Andere afmetingen of extra panelen', icon: 'pi pi-table' },
-  { id: 'schade', label: 'Schade aan het product',       desc: 'Slechte staat, extra herstel nodig',  icon: 'pi pi-exclamation-triangle' },
-  { id: 'overig', label: 'Overig',                        desc: 'Andere afwijking',                    icon: 'pi pi-plus-circle' },
+  { id: 'maten',  label: 'Maten / aantallen wijken af', desc: 'Andere afmetingen of extra panelen', icon: 'ti ti-table' },
+  { id: 'schade', label: 'Schade aan goederen',       desc: 'Slechte staat, extra herstel nodig',  icon: 'ti ti-alert-triangle' },
+  { id: 'overig', label: 'Overig',                        desc: 'Andere afwijking',                    icon: 'ti ti-circle-plus' },
 ]
 
 const selectedTypes  = ref<string[]>([])
