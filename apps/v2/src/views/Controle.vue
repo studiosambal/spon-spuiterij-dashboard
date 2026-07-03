@@ -167,7 +167,7 @@
       <!-- Foto's maken — inline; meerdere mogelijk. Alleen als ze er nog niet zijn -->
       <div v-if="startZonderFoto" class="card">
         <div style="font-weight:700;font-size:15px">Foto's maken <span style="font-weight:400;font-size:13px;color:var(--muted)">(aanbevolen)</span></div>
-        <div style="font-size:13px;color:var(--muted);margin-top:2px;margin-bottom:12px">Leg vast hoe de order binnenkwam — zo sta je sterk bij latere schadeklachten.</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:2px;margin-bottom:12px">Leg vast hoe de order binnenkwam, zo sta je sterk bij latere schadeklachten.</div>
 
         <input ref="cameraInput" type="file" accept="image/*" capture="environment" style="display:none" @change="onFoto" />
 

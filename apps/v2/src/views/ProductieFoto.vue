@@ -85,7 +85,7 @@
 
       <div v-if="isBefore" class="alert alert-info" style="width:100%;margin-top:24px;text-align:left">
         <strong>Bewaard als bewijs</strong>
-        Vastgelegd hoe het binnenkwam — sterk bewijs als er later schade wordt geclaimd.
+        Vastgelegd hoe het binnenkwam, sterk bewijs als er later schade wordt geclaimd.
       </div>
       <div v-else class="alert alert-info" style="width:100%;margin-top:24px;text-align:left">
         <strong>Volgende stap</strong>
