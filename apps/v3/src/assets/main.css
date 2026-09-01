@@ -1,0 +1,400 @@
+@import url('https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  /* Sky palette mapped to app tokens */
+  --primary:        #0ea5e9;   /* sky-500 */
+  --primary-dark:   #0284c7;   /* sky-600 */
+  --primary-light:  #f0f9ff;   /* sky-50  */
+  --primary-border: #bae6fd;   /* sky-200 */
+
+  --surface:  #f1f2f4;   /* licht neutraal grijs — rustig, nauwelijks kleurzweem; witte kaarten scheiden op contrast + zachte schaduw, niet op randjes */
+  --card:     #ffffff;
+  --border:   #e2e8f0;
+  --hairline: #edf2f7;   /* extra lichte scheidingslijn bínnen witte kaarten */
+  --text:     #0f172a;   /* slate-900 */
+  --muted:    #475569;   /* slate-600 — donkerder voor werkplaatscontrast */
+  --muted-surface: #3d5d77;   /* sky-afgeleide secundaire inkt voor tekst dírect op het blauwe canvas — geen generiek grijs op gekleurd vlak */
+  --radius:   12px;
+  --shadow:   0 1px 3px rgba(15,23,42,.06), 0 2px 6px rgba(15,23,42,.04);   /* zacht — geeft wit net wat contrast op het blauw */
+
+  /* Status colours — één stap dieper dan de 50-tinten, zodat badges ook op de blauwe achtergrond leesbaar blijven */
+  --status-bevestigd-bg:  #bae6fd; --status-bevestigd-fg:  #075985;   /* sky-blauw, harmonieert met de 'Binnenkomst'-footer */
+  --status-ontvangen-bg:  #5eead4; --status-ontvangen-fg:  #134e4a;   /* teal-300 — onderscheidbaar van het sky van 'te ontvangen', vol genoeg om niet te vervagen */
+  --status-productie-bg:  #e9d5ff; --status-productie-fg:  #6b21a8;
+  --status-gereed-bg:     #ffedd5; --status-gereed-fg:     #9a3412;   /* amber — 'wacht op betaling' is een let-op (nog niet afgeven) */
+  --status-klaar-bg:      #dcfce7; --status-klaar-fg:      #15803d;
+  --status-afgerond-bg:   #e2e8f0; --status-afgerond-fg:   #475569;
+}
+
+html, body {
+  font-family: 'Fira Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--surface);
+  color: var(--text);
+  min-height: 100dvh;
+  font-size: 15px;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Browser-oppervlakken horen bij het palet, niet bij de browserdefaults */
+::selection { background: var(--primary-border); color: var(--text); }
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+input::placeholder, textarea::placeholder { color: #64748b; opacity: 1; }
+
+#app-shell {
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+}
+
+.app-body { flex: 1; display: flex; flex-direction: column; }
+
+/* ── Global top bar ── */
+.top-bar {
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(15,23,42,.05);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+.top-bar-user   { display: flex; align-items: center; gap: 10px; }
+.user-meta      { display: flex; flex-direction: column; align-items: flex-end; }
+.user-name      { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.2; }
+.user-company   { font-size: 12px; color: var(--muted); line-height: 1.2; }
+
+/* ── Page header ── */
+.app-header {
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(15,23,42,.05);
+  padding: 12px 16px 10px;
+  position: sticky;
+  top: 0;   /* top-bar wordt op detailpagina's verborgen */
+  z-index: 10;
+}
+.app-header h1    { font-size: 17px; font-weight: 700; }
+.app-header .subtitle { font-size: 13px; color: var(--muted-surface); margin-top: 1px; }
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--primary);
+  font-size: 14px;
+  font-weight: 500;
+  background: none;
+  border: none;
+  cursor: pointer;
+  min-height: 44px;            /* tap target */
+  padding: 6px 8px;
+  margin: 0 -8px 4px -8px;     /* hitgebied vergroten zonder visueel te verschuiven */
+}
+
+/* ── Page content ── */
+.page-content {
+  flex: 1;
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ── Card — wit vlak op de blauwe achtergrond; contrast doet het werk, geen rand of schaduw ── */
+.card {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 18px 16px;
+  box-shadow: var(--shadow);
+}
+
+/* ── Status badges ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.badge-bevestigd        { background: var(--status-bevestigd-bg); color: var(--status-bevestigd-fg); }
+.badge-ontvangen        { background: var(--status-ontvangen-bg); color: var(--status-ontvangen-fg); }
+.badge-in_productie     { background: var(--status-productie-bg); color: var(--status-productie-fg); }
+.badge-productie_gereed { background: var(--status-gereed-bg);    color: var(--status-gereed-fg);    }
+.badge-klaar            { background: var(--status-klaar-bg);     color: var(--status-klaar-fg);     }
+.badge-afgerond         { background: var(--status-afgerond-bg);  color: var(--status-afgerond-fg);  }
+.badge-meerwerk_wacht   { background: var(--status-gereed-bg); color: var(--status-gereed-fg); }   /* oranje — consistent met de statusbalk en het detail */
+
+/* ── OrderCard (dashboard) ── */
+.ordercard {
+  background: var(--card);
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: box-shadow .15s;
+}
+.ordercard:active { box-shadow: 0 0 0 3px var(--primary); }
+.oc-thumb {
+  flex-shrink: 0;
+  width: 64px; height: 64px;
+  border-radius: 12px;
+  background: #eef4f9;
+  display: flex; align-items: center; justify-content: center;
+}
+.oc-thumb img { width: 48px; height: 48px; object-fit: contain; }
+.oc-naam {
+  font-size: 16px; font-weight: 600; color: var(--text); line-height: 1.25;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.oc-kleur { font-size: 13px; color: var(--muted); }
+
+/* ── Section label ── */
+.section-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted-surface);
+  padding: 2px 0;
+}
+/* Ritme: een label hoort strakker bij zijn eigen groep dan bij de vorige —
+   meer lucht boven een kop (14+10) dan eronder (14) */
+.page-content > .section-label { margin-top: 10px; }
+.page-content > .section-label:first-child { margin-top: 0; }
+
+/* ── Detail rows ── */
+.detail-row {
+  padding: 11px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.detail-row .label      { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.detail-row .value      { font-size: 15px; line-height: 1.4; }
+
+/* ── Process steps ── */
+.process-step { display: flex; align-items: flex-start; gap: 12px; padding: 11px 0; }
+.step-dot {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+  font-size: 12px; font-weight: 700;
+  transition: all .15s;
+}
+.step-dot-done    { background: var(--primary); color: #fff; }
+.step-dot-current { background: var(--primary-light); color: var(--primary); border: 2px solid var(--primary); }
+.step-dot-pending { background: #f1f5f9; color: #94a3b8; border: 2px solid var(--border); }
+.step-body        { flex: 1; }
+.step-label       { font-size: 14px; font-weight: 500; }
+.step-label-done    { color: var(--text); }
+.step-label-current { color: var(--primary); font-weight: 700; }
+.step-label-pending { color: #94a3b8; }
+.step-desc        { font-size: 13px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+
+/* ── Alert/message box ── */
+.alert {
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  font-size: 14px;
+  line-height: 1.5;
+  box-shadow: var(--shadow);
+}
+.alert strong     { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 3px; }
+.alert-warning    { background: #fff7ed; color: #9a3412; border: 1px solid #fed7aa; }
+.alert-info       { background: #e0f2fe; color: #075985; border: 1px solid var(--primary-border); }   /* sky-100 — primary-light is nu gelijk aan de achtergrond */
+.alert-success    { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+.alert-error      { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+.alert-warning strong { color: #9a3412; }
+.alert-info strong    { color: #075985; }
+.alert-success strong { color: #15803d; }
+.alert-error strong   { color: #b91c1c; }
+
+/* Invoervelden minimaal 16px zodat mobiel niet auto-zoomt bij focus */
+input, textarea, .p-inputtext { font-size: 16px !important; }
+
+/* ── Bottom bar ── */
+.bottom-bar {
+  position: sticky; bottom: 0;
+  background: var(--surface);
+  padding: 12px 14px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));   /* iPhone home-indicator */
+  display: flex; flex-direction: column; gap: 8px;
+}
+
+/* ── PrimeVue Button overrides — matches website button style ── */
+.p-button {
+  font-family: 'Fira Sans', sans-serif !important;
+  font-weight: 600 !important;
+  min-height: 56px !important;
+  border-radius: 8px !important;
+  font-size: 16px !important;
+  width: 100%;
+  justify-content: center;
+  letter-spacing: 0.01em !important;
+  transition: opacity .15s, transform .1s, box-shadow .15s !important;
+}
+.p-button:not(:disabled):active { transform: scale(0.98); }
+.p-button.p-button-outlined { border-width: 1.5px !important; }
+.p-button.btn-danger {
+  background: #fff7ed !important;
+  border-color: #fed7aa !important;
+  color: #9a3412 !important;
+}
+.p-button.btn-danger:hover { background: #ffedd5 !important; }
+/* Uitgeschakeld: duidelijk grijs, niet een lichte variant van actief — en een tint dieper dan de pagina-achtergrond */
+.p-button:disabled, .p-button.p-disabled {
+  background: #cbd5e1 !important;
+  border-color: #cbd5e1 !important;
+  color: #64748b !important;
+  opacity: 1 !important;
+  cursor: not-allowed !important;
+}
+
+/* Checkboxes groter voor bediening in de werkplaats */
+.p-checkbox, .p-checkbox .p-checkbox-box {
+  width: 28px !important;
+  height: 28px !important;
+}
+
+/* ── Checklist ── */
+.check-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--hairline);
+  cursor: pointer;
+  transition: background .1s;
+}
+.check-item:last-child { border-bottom: none; }
+.check-item-body      { flex: 1; }
+.check-item-label     { font-size: 15px; font-weight: 500; }
+.check-item-desc      { font-size: 13px; color: var(--muted); margin-top: 1px; }
+
+/* ── Photo grid ── */
+.photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.photo-thumb {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  border: 1.5px dashed var(--border);
+  background: #f6fafd;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 20px;
+  transition: all .12s;
+}
+.photo-thumb.captured { border-style: solid; border-color: var(--primary-border); background: var(--primary-light); color: var(--primary); }
+.photo-thumb-label    { font-size: 12px; font-weight: 500; }
+.photo-add {
+  aspect-ratio: 1; border-radius: 8px;
+  border: 1.5px dashed var(--border);
+  background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--muted); font-size: 20px;
+  transition: all .12s;
+}
+.photo-add:active { background: var(--primary-light); border-color: var(--primary-border); color: var(--primary); }
+
+/* ── Success screen ── */
+.success-screen {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 14px;
+  padding: 48px 20px 24px;
+  text-align: center;
+}
+.success-icon {
+  width: 64px; height: 64px;
+  background: #e0f2fe;   /* sky-100 — primary-light valt weg tegen de pagina-achtergrond */
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--primary); font-size: 26px;
+}
+.success-title  { font-size: 19px; font-weight: 700; }
+.success-desc   { font-size: 14px; color: var(--muted-surface); line-height: 1.5; }
+
+/* ── Form fields ── */
+.field            { display: flex; flex-direction: column; gap: 6px; }
+.field-label      { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+
+/* Selection cards — matches website style */
+.tag-group        { display: flex; flex-wrap: wrap; gap: 8px; }
+.tag {
+  position: relative;
+  padding: 10px 30px 10px 14px;   /* ✓-ruimte altijd gereserveerd → geen verspringen bij selectie */
+  min-height: 44px;            /* tap target */
+  box-sizing: border-box;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: #fff;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color .15s, background .15s, box-shadow .15s;
+  font-family: inherit;
+  text-align: left;
+}
+.tag:hover { border-color: var(--primary-border); background: var(--primary-light); }
+.tag.selected {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+  font-weight: 600;
+  box-shadow: 0 0 0 1px var(--primary);
+}
+.tag.selected::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary);
+  line-height: 1;
+}
+
+.amount-input-wrap {
+  display: flex; align-items: center; gap: 8px;
+  background: #fff; border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 0 12px;
+}
+.amount-input-wrap:focus-within { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-light); }
+.amount-input-wrap span  { font-size: 16px; font-weight: 600; color: var(--muted); }
+.amount-input-wrap input {
+  border: none; padding: 12px 0;
+  font-size: 18px; font-weight: 600;
+  outline: none; font-family: inherit;
+  background: transparent; color: var(--text);
+}
+
+/* ── Panel table ── */
+.panel-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.panel-table th {
+  padding: 9px 12px;
+  text-align: left;
+  font-size: 12px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .04em;
+  color: var(--muted);
+  background: #f6fafd;
+  border-bottom: 1px solid var(--hairline);
+}
+.panel-table td { padding: 10px 12px; }
+.panel-table tr:not(:last-child) td { border-bottom: 1px solid var(--hairline); }
+/* 2 kolommen: eerste kolom (B×H / Onderdeel) links, laatste kolom (Aantal) rechts */
+.panel-table th:last-child,
+.panel-table td:last-child { text-align: right; }
+.panel-table tbody td:last-child { font-weight: 700; }

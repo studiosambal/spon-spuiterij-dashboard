@@ -11,7 +11,8 @@ Deze repo is een **monorepo** met twee zelfstandige versies van het ontwerpvoors
 | Versie | Map | Live op | Rol |
 |--------|-----|---------|-----|
 | **v1** | `apps/v1/` | `/v1` | Bevroren eerder voorstel |
-| **v2** | `apps/v2/` | `/v2` | Nieuwste voorstel (hierin wordt doorontwikkeld) |
+| **v2** | `apps/v2/` | `/v2` | Bevroren tweede voorstel |
+| **v3** | `apps/v3/` | `/v3` | Nieuwste voorstel (hierin wordt doorontwikkeld) |
 
 De hoofd-URL (`/`) toont een kleine **landingspagina** (`landing/`) met een keuze tussen v1 en v2. Beide versies delen via npm-workspaces één `node_modules` — je installeert dus maar één keer.
 
@@ -31,6 +32,7 @@ Vereist: Node.js 18+ en npm.
 ```bash
 npm install        # alle dependencies in één keer (workspaces, gedeelde node_modules)
 npm run dev:v2     # dev-server voor v2 op http://localhost:5174
+npm run dev:v3     # dev-server voor v3 op http://localhost:5175
 npm run dev:v1     # dev-server voor v1 op http://localhost:5173
 ```
 
@@ -42,7 +44,8 @@ Je werkt doorgaans aan één versie tegelijk. Open de URL op je telefoon (of ver
 |----------|------|
 | `npm run dev:v1` | Dev-server voor v1 (poort 5173, hot reload) |
 | `npm run dev:v2` | Dev-server voor v2 (poort 5174, hot reload) |
-| `npm run build` | Bouwt v1 → `dist/v1`, v2 → `dist/v2` en de landing → `dist/index.html` |
+| `npm run dev:v3` | Dev-server voor v3 (poort 5175, hot reload) |
+| `npm run build` | Bouwt v1 → `dist/v1`, v2 → `dist/v2`, v3 → `dist/v3` en de landing → `dist/index.html` |
 
 Per versie kun je ook losse scripts draaien met `npm run <script> -w v1` (of `-w v2`).
 
@@ -54,6 +57,7 @@ Netlify bouwt vanaf branch `main` met `npm run build` en publiceert de map `dist
 /        → landingspagina (keuze v1 / v2)
 /v1      → versie 1
 /v2      → versie 2
+/v3      → versie 3
 ```
 
 ## Projectstructuur
