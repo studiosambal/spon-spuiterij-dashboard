@@ -54,11 +54,38 @@ bevestigd → (meerwerk_wacht) → ontvangen → in_productie → productie_gere
 
 ### UI setup
 
-- **PrimeVue 4** with a custom `SkyPreset` (Lara base, sky-500 primary). Components registered globally in `main.ts` with `P` prefix: `PButton`, `PTag`, `PCheckbox`, `PInputText`, `PTextarea`, `PAvatar`.
-- **Message/alert boxes** use the app's own `.alert` classes (`.alert-info`, `.alert-warning`, `.alert-success`, `.alert-error`), **not** PrimeVue's `PMessage`. The custom alert keeps body text dark/high-contrast (PMessage tints the whole body in the severity colour, which reads poorly). Markup: `<div class="alert alert-info"><strong>Heading</strong> body…</div>` — `.alert strong` auto-styles the uppercase heading.
+**Native PrimeVue first.** The theme is the single source of truth: `SpuitwerkPreset` in `main.ts` (Lara base, sky primary). `src/assets/main.css` does **not** define colours of its own — its variables (`--surface`, `--card`, `--border`, `--text`, `--muted`, `--radius`) are aliases for `--p-*` tokens, and the hand-built parts reference those. Change a colour in the preset and it lands everywhere at once. Never reintroduce a hex literal outside the preset; the one exception is `kleurToHex()`, which maps RAL/NCS paint names to swatch colours and is product data, not theming.
+
+Components registered globally in `main.ts` with a `P` prefix: `PButton`, `PTag`, `PMessage`, `PCheckbox`, `PInputText`, `PTextarea`, `PAvatar`, `PIconField`, `PInputIcon`.
+
+- **Status badge** = `PTag` with a severity from `STATUS_SEVERITY` (`useOrders.ts`). Only rendered on `OrderDetail`; the dashboard carries the phase in its group headings instead.
+- **Messages** = `PMessage severity="info|warn|success|error"`, with an optional `<strong>` heading inside for the uppercase label.
+- **Search field** = `PIconField` + `PInputIcon` + `PInputText`.
+
+**Type scale.** Font sizes come from a seven-step rem scale defined in `main.css` (`--text-xs` … `--text-3xl`, 0.8rem – 2.125rem). The root font size is deliberately **not** pinned, so `1rem` is whatever the reader set in their browser and all text scales with it — which matters for a phone used in a workshop. Two rules:
+
+- **Text** uses the scale. Never a raw `px` font-size, and never a value outside the seven steps.
+- **Icons and structure** (widths, heights, borders, radii, icon `font-size`) stay in `px`: they belong to px-sized containers, and PrimeVue does the same for its own radii and border widths. An icon that grew with the reader's text setting would burst the fixed circle it sits in.
+
+Input fields are pinned to at least `1rem`; below 16px iOS zooms in on focus.
+
+**Deliberate deviations from stock Lara** — each is configured *in the preset*, not worked around in CSS, and each has a reason:
+
+| Deviation | Why |
+|---|---|
+| `text.color` → `{surface.900}`, `mutedColor` → `{surface.600}` | Lara's defaults (700/500) are too light for a phone held in a workshop under changing light. |
+| `content.borderRadius` → 12px (Lara: 6px) | Matches the calm, roomy card layout. Tag is pulled back to 6px so badges stay crisp. |
+| Tag severities → the **700** tint instead of Lara's 500 | White-on-500 fails WCAG AA (sky 2.8, green 2.3, orange 2.8, red 3.8 against a 4.5 requirement). The 700 tint scores 5.0–6.5. |
+| Message `text` → 14px / weight 400 (Lara: 1rem / 500) | With `html{font-size:15px}`, Lara's 1rem body renders *larger* than the 12px/700 heading above it and nearly as heavy, so the heading stops reading as a heading. |
+| Message `info` → `{primary.*}` instead of `{blue.*}` | The app runs on sky; Lara's blue clashes with it. |
+| Message text → the **700/800** tint instead of Lara's 600 | The tinted text itself is kept (it reads calmer than black on a coloured panel), but Lara's 600 level fails contrast against its own 50-background: 2.8–4.4:1 where 4.5 is required. At 700/800 it scores 4.8–7.1. |
+
+**Still hand-built, on purpose:** the order card (`OrderCard.vue`), the fase groups on the dashboard, the timeline, the panel table and the signal footer strips. The footer strip is white by default and only takes a tint when there is something to act on (red = overdue, orange = do not hand over, green = paid, may go). A grey resting tint was tried and dropped: it sat too close to the page background, so the card looked like it bled into the page, and it diluted the signal by putting a coloured band on every card. These are bespoke compositions with no PrimeVue equivalent — forcing `Card`/`Panel` around them would add markup without adding behaviour. They take all their colours from the same tokens, so they cannot drift.
+
+*Note:* `PMessage` animates its height open on mount (native Lara behaviour). Harmless in a real browser; in a hidden/headless pane the animation can stall at height 0, so measure with the pane fronted.
 - **Headers**: the global `.top-bar` (logo + avatar) in `App.vue` renders **only on the dashboard** (`route.path === '/'`). All sub-pages have their own sticky `.app-header` (back button + title) at `top:0` — this avoids two stacked headers eating vertical space on mobile.
 - **Tabler Icons** for all icons (class `ti ti-*`), loaded as a webfont — `@tabler/icons-webfont` is imported in `main.ts`. (Outline only; the project migrated off PrimeIcons.)
-- **No Tailwind** — all styling is in `src/assets/main.css` using CSS custom properties (`--primary`, `--surface`, `--card`, `--border`, `--muted`, `--radius`, etc.). Views use these global CSS classes (`card`, `badge`, `order-item`, `detail-row`, `bottom-bar`, `alert`, etc.) — avoid scoped styles.
+- **No Tailwind** — all styling is in `src/assets/main.css`, which aliases PrimeVue tokens (see above). Views use the global classes (`card`, `ordercard`, `section-label`, `detail-row`, `bottom-bar`, `panel-table`) — avoid scoped styles.
 - Font: **Fira Sans** (Google Fonts).
 - Build output goes to **`dist/v3`** at the repo root (configured in `vite.config.ts`).
 

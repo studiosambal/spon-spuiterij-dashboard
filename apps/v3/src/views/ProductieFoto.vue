@@ -11,11 +11,11 @@
     <main class="page-content" style="padding-bottom:100px">
 
       <!-- Instructie -->
-      <div class="alert alert-info">
+      <PMessage severity="info">
         {{ isBefore
           ? 'Maak foto\'s van alle kanten. Dit is je bewijs van hoe het binnenkwam.'
           : 'Fotografeer het afgewerkte product van alle kanten. Daarmee sta je sterk bij latere schadeklachten.' }}
-      </div>
+      </PMessage>
 
       <!-- Verborgen camera-input -->
       <input
@@ -35,24 +35,24 @@
              @click="verwijderFoto(i)"
              :aria-label="`Foto ${i + 1} verwijderen`"
              role="button">
-          <i class="ti ti-circle-x" style="position:absolute;top:4px;right:4px;font-size:20px;color:#dc2626;background:#fff;border-radius:50%" />
+          <i class="ti ti-circle-x" style="position:absolute;top:4px;right:4px;font-size:20px;color:var(--p-red-600);background:var(--p-surface-0);border-radius:50%" />
           <i class="ti ti-photo" style="font-size:22px" />
           <span class="photo-thumb-label">Foto {{ i + 1 }}</span>
         </div>
       </div>
-      <div v-if="capturedCount > 0" style="font-size:12px;color:var(--muted);margin-top:6px;text-align:center">
+      <div v-if="capturedCount > 0" style="font-size:var(--text-xs);color:var(--muted);margin-top:6px;text-align:center">
         Tik op een foto om te verwijderen
       </div>
 
       <!-- Foto maken knop — prominent, altijd zichtbaar -->
       <button
-        style="width:100%;background:#f1f5f9;border:2px dashed var(--border);border-radius:12px;padding:24px 16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;font-family:inherit;transition:background .15s,border-color .15s"
+        style="width:100%;background:var(--p-surface-100);border:2px dashed var(--border);border-radius:12px;padding:24px 16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;font-family:inherit;transition:background .15s,border-color .15s"
         @click="maakFoto">
         <div style="width:56px;height:56px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center">
-          <i class="ti ti-camera" style="font-size:24px;color:#fff" />
+          <i class="ti ti-camera" style="font-size:24px;color:var(--p-surface-0)" />
         </div>
-        <div style="font-size:15px;font-weight:700;color:var(--text)">Foto maken</div>
-        <div style="font-size:13px;color:var(--muted)">
+        <div style="font-size:var(--text-base);font-weight:700;color:var(--text)">Foto maken</div>
+        <div style="font-size:var(--text-sm);color:var(--muted)">
           {{ capturedCount === 0 ? 'Minimaal 1 foto vereist' : `${capturedCount} foto${capturedCount === 1 ? '' : '\'s'} gemaakt, tik voor meer` }}
         </div>
       </button>
@@ -72,24 +72,24 @@
     <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px;text-align:center">
 
       <div style="width:80px;height:80px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;margin-bottom:20px">
-        <i class="ti ti-camera" style="font-size:36px;color:#fff" />
+        <i class="ti ti-camera" style="font-size:36px;color:var(--p-surface-0)" />
       </div>
 
-      <div style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:8px">
+      <div style="font-size:var(--text-xl);font-weight:700;color:var(--text);margin-bottom:8px">
         {{ isBefore ? 'Foto opgeslagen' : 'Productie afgerond' }}
       </div>
-      <div style="font-size:15px;color:var(--muted);line-height:1.5">
+      <div style="font-size:var(--text-base);color:var(--muted);line-height:1.5">
         {{ capturedCount }} foto{{ capturedCount === 1 ? '' : '\'s' }} vastgelegd voor {{ order?.klant }}
       </div>
 
-      <div v-if="isBefore" class="alert alert-info" style="width:100%;margin-top:24px;text-align:left">
+      <PMessage severity="info" v-if="isBefore" style="width:100%;margin-top:24px;text-align:left">
         <strong>Bewaard als bewijs</strong>
         Je hebt vastgelegd hoe het binnenkwam. Daarmee sta je sterk bij een latere schadeklacht.
-      </div>
-      <div v-else class="alert alert-info" style="width:100%;margin-top:24px;text-align:left">
+      </PMessage>
+      <PMessage severity="info" v-else style="width:100%;margin-top:24px;text-align:left">
         <strong>Volgende stap</strong>
         SpuitwerkOnline verwerkt de betaling. De klant krijgt een ophaalmelding.
-      </div>
+      </PMessage>
     </div>
 
     <div style="padding:16px;display:flex;flex-direction:column;gap:10px">

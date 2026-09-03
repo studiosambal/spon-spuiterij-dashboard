@@ -39,10 +39,10 @@
         <div style="padding:14px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between"
              @click="toonWachtwoord = !toonWachtwoord">
           <div>
-            <div class="label" style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)">Wachtwoord</div>
-            <div class="value" style="font-size:15px">••••••••</div>
+            <div class="label">Wachtwoord</div>
+            <div class="value" style="font-size:var(--text-base)">••••••••</div>
           </div>
-          <span style="display:flex;align-items:center;gap:6px;color:var(--primary);font-weight:600;font-size:14px">
+          <span style="display:flex;align-items:center;gap:6px;color:var(--primary);font-weight:600;font-size:var(--text-base)">
             Wijzigen
             <i :class="toonWachtwoord ? 'ti ti-chevron-up' : 'ti ti-chevron-down'" style="font-size:12px" />
           </span>
@@ -52,22 +52,22 @@
           <div class="field" style="margin-top:14px">
             <div class="field-label">Huidig wachtwoord</div>
             <PInputText type="password" v-model="huidig" placeholder="••••••••"
-                        style="width:100%;font-size:15px;height:48px" />
+                        style="width:100%;font-size:var(--text-base);height:48px" />
           </div>
           <div class="field">
             <div class="field-label">Nieuw wachtwoord</div>
             <PInputText type="password" v-model="nieuw" placeholder="Minimaal 8 tekens"
-                        style="width:100%;font-size:15px;height:48px" />
+                        style="width:100%;font-size:var(--text-base);height:48px" />
           </div>
           <div class="field">
             <div class="field-label">Herhaal nieuw wachtwoord</div>
             <PInputText type="password" v-model="herhaal" placeholder="Zelfde wachtwoord"
-                        style="width:100%;font-size:15px;height:48px" />
+                        style="width:100%;font-size:var(--text-base);height:48px" />
           </div>
           <PButton label="Wachtwoord opslaan" icon="ti ti-check"
                    :disabled="!huidig || !nieuw || nieuw !== herhaal" />
           <div v-if="nieuw && herhaal && nieuw !== herhaal"
-               style="font-size:13px;color:#dc2626;text-align:center">
+               style="font-size:var(--text-sm);color:var(--p-red-600);text-align:center">
             Wachtwoorden komen niet overeen
           </div>
         </div>
@@ -76,10 +76,10 @@
       <!-- Uitloggen -->
       <div class="section-label">Sessie</div>
       <div class="card" style="padding:0;overflow:hidden">
-        <button style="width:100%;display:flex;align-items:center;gap:12px;padding:16px;background:none;border:none;cursor:pointer;font-family:inherit;text-align:left;color:#dc2626"
+        <button style="width:100%;display:flex;align-items:center;gap:12px;padding:16px;background:none;border:none;cursor:pointer;font-family:inherit;text-align:left;color:var(--p-red-600)"
                 @click="uitloggen">
           <i class="ti ti-logout" style="font-size:18px" />
-          <span style="font-size:15px;font-weight:600">Uitloggen</span>
+          <span style="font-size:var(--text-base);font-weight:600">Uitloggen</span>
         </button>
       </div>
 

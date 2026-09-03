@@ -2,11 +2,11 @@
   <main class="page-content">
 
     <!-- Zoeken op ordernummer of klantnaam -->
-    <div style="position:relative">
-      <i class="ti ti-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px" />
-      <input v-model="zoek" type="search" placeholder="Zoek op ordernummer of naam"
-             style="width:100%;height:46px;padding:0 12px 0 36px;border:none;border-radius:12px;font-family:inherit;font-size:15px;background:#fff;color:var(--text);box-shadow:var(--shadow)" />
-    </div>
+    <PIconField>
+      <PInputIcon class="ti ti-search" />
+      <PInputText v-model="zoek" type="search" placeholder="Zoek op ordernummer of naam"
+                  style="width:100%" />
+    </PIconField>
 
     <div v-if="zoek && geenResultaten" class="card" style="text-align:center;color:var(--muted);padding:24px">
       <i class="ti ti-search" style="font-size:24px;display:block;margin-bottom:8px;opacity:.4" />
@@ -47,7 +47,7 @@
               @click="toonAfgerond = !toonAfgerond">
         <span>Afgerond ({{ afgerondOrders.length }})</span>
         <span style="display:flex;align-items:center;gap:6px">
-          <span v-if="uitbetalingOpenstaand > 0" style="color:#854d0e;font-weight:700;font-size:12px">
+          <span v-if="uitbetalingOpenstaand > 0" style="color:var(--p-yellow-800);font-weight:700;font-size:var(--text-xs)">
             {{ uitbetalingOpenstaand }} wacht op uitbetaling
           </span>
           <i :class="toonAfgerond ? 'ti ti-chevron-up' : 'ti ti-chevron-down'" style="color:var(--muted)" />

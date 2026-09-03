@@ -5,43 +5,53 @@
         <i class="ti ti-arrow-left" /> Terug
       </button>
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-        <h1 style="font-family:monospace">{{ order.id }}</h1>
-        <span :class="['badge', 'badge-' + order.status]" style="flex-shrink:0">{{ STATUS_LABELS[order.status] }}</span>
+        <!-- Zelfde behandeling als op het dashboard: het ordernummer is een
+             referentie, geen titel. De dienstnaam hieronder draagt het gewicht. -->
+        <span style="font-family:monospace;font-weight:600;font-size:var(--text-sm);color:var(--muted)">{{ order.id }}</span>
+        <PTag :severity="STATUS_SEVERITY[order.status]" :value="STATUS_LABELS[order.status]" style="flex-shrink:0" />
       </div>
       <div class="subtitle" style="color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ klantPlaats(order) }}</div>
+      <!-- Opleverdatum in de sticky header: hij blijft in beeld terwijl de spuiter
+           door de specs scrolt, en hij hoort bij de order — niet bij een dienst. -->
+      <div v-if="order.verwacht_gereed_datum"
+           style="display:flex;align-items:center;gap:7px;margin-top:5px;font-size:var(--text-sm)"
+           :style="order.te_laat ? 'color:var(--p-red-700)' : 'color:var(--text)'">
+        <i class="ti ti-flag" style="font-size:14px;flex-shrink:0" />
+        <span>Opleveren vóór <strong>{{ order.verwacht_gereed_datum }}</strong><template v-if="order.gereed_relatief"> &middot; {{ order.gereed_relatief }}</template></span>
+      </div>
     </header>
 
     <main class="page-content" :style="{ paddingBottom: order.status === 'productie_gereed' ? '24px' : '140px' }">
 
       <!-- Te laat: verwachte opleverdatum overschreden -->
-      <div v-if="order.te_laat" class="alert alert-error">
+      <PMessage severity="error" v-if="order.te_laat">
         <strong><template v-if="order.gereed_relatief">{{ order.gereed_relatief }}</template></strong>
 		Deze order had <template v-if="order.verwacht_gereed_datum">{{ order.verwacht_gereed_datum }}</template> afgerond moeten zijn. Rond het zo snel mogelijk af.
-      </div>
+      </PMessage>
 
       <!-- Opmerking alert — alleen relevant voor ontvangst, daarna vervallen -->
-      <div v-if="order.opmerkingen && order.status === 'bevestigd'" class="alert alert-warning">
+      <PMessage severity="warn" v-if="order.opmerkingen && order.status === 'bevestigd'">
         <strong>Let op bij ontvangst</strong>
         {{ order.opmerkingen }}
-      </div>
+      </PMessage>
 
-      <div v-if="order.status === 'meerwerk_wacht'" class="alert alert-warning">
+      <PMessage severity="warn" v-if="order.status === 'meerwerk_wacht'">
         <strong>Wacht op akkoord</strong>
         We wachten op akkoord van de klant voor het meerwerk. Zodra het akkoord binnen is, kan de productie worden hervat.
-      </div>
-      <div v-else-if="order.status === 'ontvangen'" class="alert alert-info">
+      </PMessage>
+      <PMessage severity="info" v-else-if="order.status === 'ontvangen'">
         <strong>Ontvangst bevestigd</strong>
         Controleer de order en start het spuitwerk. Je kunt een foto maken van de binnenkomst.
-      </div>
-      <div v-else-if="order.status === 'productie_gereed'" class="alert alert-warning">
+      </PMessage>
+      <PMessage severity="warn" v-else-if="order.status === 'productie_gereed'">
         <strong>Wachten op betaling</strong>
         Klant heeft nog niet betaald. Geef de goederen nog niet af. Je ontvangt een melding zodra de betaling is bevestigd.
-      </div>
+      </PMessage>
       <template v-else-if="order.status === 'klaar'">
-        <div class="alert alert-success">
+        <PMessage severity="success">
           <strong>Betaling bevestigd, klaar voor overdracht</strong>
 		  Je kunt de goederen overhandigen. Maak een opleverfoto, zo sta je sterk bij latere schadeklachten.
-        </div>
+        </PMessage>
       </template>
 
       <!-- Diensten — geclusterd per dienst: naam, hoeveelheid, kleur, opdracht, panelen -->
@@ -50,44 +60,54 @@
       <div v-for="(dienst, di) in order.diensten" :key="di" class="card" style="padding:0;overflow:hidden">
 
         <!-- Kaart-kop: thumbnail + naam + hoeveelheid + kleurstaal (zoals het dashboard) -->
-        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px">
+        <div style="display:flex;align-items:center;gap:14px;padding:14px 16px">
           <div class="oc-thumb">
             <img :src="dienstImage(dienst.naam)" :alt="dienst.naam" />
           </div>
           <div style="min-width:0;flex:1">
-            <div style="font-size:16px;font-weight:600;line-height:1.25;color:var(--text)">{{ dienst.naam }}</div>
-            <div style="font-size:13px;color:var(--muted);margin-top:1px">{{ dienstHoeveelheid(dienst) }}</div>
-            <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
-              <span :style="{ display:'inline-block', width:'14px', height:'14px', borderRadius:'4px', flexShrink:0, border:'1px solid rgba(0,0,0,0.18)', background: kleurOnbekend(dienst) ? '#e2e8f0' : kleurToHex(dienst.kleur) }" />
-              <span class="oc-kleur" :style="kleurOnbekend(dienst) ? { fontStyle:'italic' } : {}">{{ dienst.kleur }}</span>
-            </div>
+            <div style="font-size:var(--text-lg);font-weight:600;line-height:1.25;color:var(--text)">{{ dienst.naam }}</div>
+            <div style="font-size:var(--text-sm);color:var(--muted);margin-top:2px">{{ dienstHoeveelheid(dienst) }}</div>
           </div>
         </div>
 
-        <!-- Mengrecept (alleen bij een mengverhouding) -->
-        <div v-if="dienst.kleur_recept" style="border-top:1px solid var(--hairline);padding:11px 14px">
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:6px">Mengrecept</div>
-          <div style="font-size:12px;color:var(--text);background:#f6fafd;border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-family:monospace;white-space:pre-wrap">{{ dienst.kleur_recept }}</div>
+        <!-- Alle specs onder elkaar in één kolom: zo scant de spuiter van boven
+             naar beneden "wat moet ik weten". Kleur staat bovenaan en is als enige
+             vet — dat is de spec waar het spuitwerk op staat of valt. -->
+        <div style="padding:2px 16px 14px">
+          <div class="spec-rij">
+            <span class="label">Kleur</span>
+            <span class="waarde" :style="kleurOnbekend(dienst) ? 'color:var(--muted);font-style:italic' : ''">
+              <strong v-if="!kleurOnbekend(dienst)">{{ dienst.kleur }}</strong>
+              <template v-else>{{ dienst.kleur }}</template>
+            </span>
+          </div>
+          <div v-for="eig in eigenschappen(dienst)" :key="eig.label" class="spec-rij">
+            <span class="label">{{ eig.label }}</span>
+            <span class="waarde">{{ eig.waarde }}</span>
+          </div>
         </div>
 
-        <!-- Eigenschappen — gelabeld 2-koloms rooster -->
-        <div style="border-top:1px solid var(--hairline);padding:12px 14px;display:grid;grid-template-columns:1fr 1fr;gap:12px 16px">
-          <div v-for="eig in eigenschappen(dienst)" :key="eig.label">
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)">{{ eig.label }}</div>
-            <div style="font-size:14px;font-weight:600;color:var(--text);margin-top:1px">{{ eig.waarde }}</div>
+        <!-- Mengrecept: eigen blok, want het is een instructie en geen spec-waarde -->
+        <div v-if="dienst.kleur_recept" style="padding:0 16px 14px">
+          <div class="subpaneel">
+            <div class="subpaneel-kop">Mengrecept</div>
+            <div style="padding:10px 12px;font-size:var(--text-sm);color:var(--text);font-family:monospace;white-space:pre-wrap;background:var(--card)">{{ dienst.kleur_recept }}</div>
           </div>
         </div>
 
         <!-- Handgreepgaten (indien van toepassing) -->
-        <div v-if="dienst.handgreepgaten" style="border-top:1px solid var(--hairline);padding:11px 14px">
-          <div style="display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700;color:#9a3412;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:7px 10px">
-            <i class="ti ti-alert-circle" style="font-size:15px" />
+        <div v-if="dienst.handgreepgaten" style="padding:0 16px 14px">
+          <div style="display:flex;align-items:center;gap:8px;font-size:var(--text-sm);font-weight:600;color:var(--p-orange-800);background:var(--p-orange-50);border:1px solid var(--p-orange-200);border-radius:8px;padding:9px 11px">
+            <i class="ti ti-alert-circle" style="font-size:16px;flex-shrink:0" />
             Handgreepgaten herstellen op {{ dienst.handgreepgaten_aantal }} panelen
           </div>
         </div>
 
-        <!-- Panelen van deze dienst -->
-        <table class="panel-table" style="border-top:1px solid var(--hairline)">
+        <!-- Panelen als blok in de kaart: wat er fysiek ligt is een eigen
+             onderwerp, niet de zoveelste rij onder de specs. -->
+        <div style="padding:0 16px 16px">
+          <div class="subpaneel">
+        <table class="panel-table">
           <thead>
             <tr>
               <th v-if="heeftAfmetingen(dienst)">B&times;H (cm)</th>
@@ -104,34 +124,45 @@
           </tbody>
           <tfoot>
             <tr>
-              <td style="font-weight:700;color:var(--muted);border-top:1px solid var(--hairline);background:#f6fafd">Totaal</td>
-              <td style="font-weight:700;border-top:1px solid var(--hairline);background:#f6fafd">{{ dienstHoeveelheid(dienst) }}</td>
+              <td style="font-weight:700;color:var(--muted);border-top:1px solid var(--hairline);background:var(--p-surface-50)">Totaal</td>
+              <td style="font-weight:700;border-top:1px solid var(--hairline);background:var(--p-surface-50)">{{ dienstHoeveelheid(dienst) }}</td>
             </tr>
           </tfoot>
         </table>
-      </div>
-
-      <!-- Tijdlijn — waar staat de order in het proces -->
-      <div class="section-label">Tijdlijn</div>
-      <div class="card">
-        <div v-for="(stap, i) in tijdlijn" :key="stap.key" style="display:flex;gap:12px">
-          <div style="display:flex;flex-direction:column;align-items:center">
-            <div :style="{ width:'22px', height:'22px', borderRadius:'50%', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', background: stap.state === 'done' ? 'var(--primary)' : stap.state === 'current' ? 'var(--primary-light)' : '#fff', border: stap.state === 'todo' ? '2px solid var(--border)' : stap.state === 'current' ? '2px solid var(--primary)' : 'none' }">
-              <i v-if="stap.state === 'done'" class="ti ti-check" style="font-size:12px;color:#fff" />
-              <span v-else-if="stap.state === 'current'" style="display:block;width:8px;height:8px;border-radius:50%;background:var(--primary)" />
-            </div>
-            <div v-if="i < tijdlijn.length - 1" :style="{ width:'2px', flex:'1', minHeight:'16px', background: stap.state === 'done' ? 'var(--primary)' : 'var(--border)' }" />
-          </div>
-          <div :style="{ paddingBottom: i < tijdlijn.length - 1 ? '16px' : '0', minWidth:'0' }">
-            <div :style="{ fontSize:'14px', fontWeight: stap.state === 'current' ? 700 : 600, color: stap.state === 'todo' ? 'var(--muted)' : 'var(--text)' }">{{ stap.label }}</div>
-            <div v-if="stap.datum" style="font-size:12px;color:var(--muted);margin-top:1px">{{ stap.datum }}</div>
           </div>
         </div>
       </div>
 
-      <!-- Overzicht — order-niveau (los van het spuitwerk) -->
+      <!-- Het volledige orderdossier. Ordernummer, klant en opleverdatum staan ook in
+           de sticky header; dat is bewust. De header is meelopende context tijdens het
+           werken, dit blok is het complete overzicht dat je in één keer naleest. -->
       <div class="section-label">Overzicht</div>
       <div class="card">
+
+        <!-- Status als uitklapbaar element: dichtgeklapt zegt het wáár de order staat
+             én wat er volgt, open toont het de hele route met datums. Een badge alleen
+             ('Ontvangen') laat de vraag 'en dan?' onbeantwoord. -->
+        <button class="status-rij" :aria-expanded="toonTijdlijn" @click="toonTijdlijn = !toonTijdlijn">
+          <span class="label">Status</span>
+          <span class="waarde">
+            <span style="font-weight:600;color:var(--text)">{{ STATUS_LABELS[order.status] }}</span>
+            <span v-if="volgendeStap && !toonTijdlijn" style="display:block;color:var(--muted);font-size:var(--text-sm);margin-top:1px">
+              {{ volgendeStap.tekst }}<template v-if="volgendeStap.datum"> &middot; {{ volgendeStap.datum }}</template>
+            </span>
+          </span>
+          <i :class="toonTijdlijn ? 'ti ti-chevron-up' : 'ti ti-chevron-down'" style="color:var(--muted);flex-shrink:0" />
+        </button>
+
+        <div v-if="toonTijdlijn" class="logboek">
+          <div v-for="(regel, i) in logboek" :key="i" class="log-regel">
+            <span :class="['log-bol', 'log-bol-' + regel.state]">
+              <i v-if="regel.state === 'gedaan'" class="ti ti-check" style="font-size:10px" />
+            </span>
+            <span class="log-datum">{{ regel.datum ?? (regel.state === 'nu' ? 'nu' : '') }}</span>
+            <span :class="['log-tekst', 'log-tekst-' + regel.state]">{{ regel.tekst }}</span>
+          </div>
+        </div>
+
         <div class="detail-row">
           <span class="label">Ordernummer</span>
           <span class="value" style="font-family:monospace">{{ order.id }}</span>
@@ -140,13 +171,13 @@
           <span class="label">Klant</span>
           <span class="value">{{ klantPlaats(order) }}</span>
         </div>
-        <div v-if="order.ontvangstdatum || order.verwacht_levering || order.aanlevering" class="detail-row">
+        <div v-if="aanleveringSamenvatting" class="detail-row">
           <span class="label">Aanlevering</span>
           <span class="value">{{ aanleveringSamenvatting }}</span>
         </div>
         <div v-if="order.verwacht_gereed_datum" class="detail-row">
-          <span class="label">Oplevering</span>
-          <span class="value" :style="order.te_laat ? 'color:#b91c1c;font-weight:600' : ''">{{ order.verwacht_gereed_datum }}<template v-if="order.gereed_relatief"> · {{ order.gereed_relatief }}</template></span>
+          <span class="label">Opleveren vóór</span>
+          <span class="value" :style="order.te_laat ? 'color:var(--p-red-700);font-weight:600' : ''">{{ gereedRegel(order) }}</span>
         </div>
         <div class="detail-row">
           <span class="label">Service</span>
@@ -200,7 +231,7 @@
 
       <!-- AFGEROND -->
       <template v-else-if="order.status === 'afgerond'">
-        <div style="text-align:center;padding:8px;font-size:13px;color:var(--muted)">
+        <div style="text-align:center;padding:8px;font-size:var(--text-sm);color:var(--muted)">
           <i class="ti ti-circle-check" style="color:var(--primary);margin-right:6px" />
           Order afgerond
         </div>
@@ -210,17 +241,17 @@
   </div>
 
   <div v-else class="page-content">
-    <div class="card" style="color:var(--muted);font-size:14px">Order niet gevonden.</div>
+    <div class="card" style="color:var(--muted);font-size:var(--text-base)">Order niet gevonden.</div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import {
-  useOrders, STATUS_LABELS, STATUS_ORDER,
+  useOrders, orderLogboek, STATUS_LABELS, STATUS_SEVERITY,
   TYPE_SERVICE_LABELS, OPPERVLAK_LABELS, GLANSGRAAD_LABELS,
-  dienstHoeveelheid, klantPlaats, type Dienst, type PaneelMaat, type OrderStatus
+  dienstHoeveelheid, klantPlaats, type Order, type Dienst, type PaneelMaat
 } from '@/composables/useOrders'
 import { dienstImage } from '@/lib/dienstImage'
 
@@ -235,26 +266,26 @@ const aanleveringSamenvatting = computed(() => {
   const o = order.value
   if (!o) return ''
   const wie = o.aanlevering === 'klant' ? 'door de klant' : o.aanlevering === 'koerier' ? 'door een koerier' : null
-  return [o.ontvangstdatum ?? o.verwacht_levering, wie].filter(Boolean).join(' · ')
+  // Al binnen? Dan staat de ontvangstdatum in het statuselement; deze rij zegt
+  // dan alleen nog hóe het kwam. Anders zou dezelfde datum er twee keer staan.
+  if (o.ontvangstdatum) return wie ? wie[0].toUpperCase() + wie.slice(1) : ''
+  return [o.verwacht_levering, wie].filter(Boolean).join(' · ')
 })
 
-// Tijdlijn: vaste mijlpalen met status done / current / todo (afgeleid van STATUS_ORDER)
-const tijdlijn = computed(() => {
-  const o = order.value
-  if (!o) return []
-  const huidig = STATUS_ORDER[o.status]
-  const stappen: { key: OrderStatus; label: string; datum?: string }[] = [
-    { key: 'ontvangen',        label: 'Ontvangen',          datum: o.ontvangstdatum },
-    { key: 'in_productie',     label: 'In productie' },
-    { key: 'productie_gereed', label: 'Gereed',             datum: o.verwacht_gereed_datum },
-    { key: 'klaar',            label: 'Klaar voor ophalen' },
-    { key: 'afgerond',         label: 'Opgehaald' },
-  ]
-  return stappen.map(s => ({
-    ...s,
-    state: (huidig > STATUS_ORDER[s.key] ? 'done' : huidig === STATUS_ORDER[s.key] ? 'current' : 'todo') as 'done' | 'current' | 'todo',
-  }))
-})
+const toonTijdlijn = ref(false)
+
+const logboek = computed(() => (order.value ? orderLogboek(order.value) : []))
+
+// Dichtgeklapt zegt de statusregel niet alleen wáár je bent maar ook wat er volgt —
+// 'Ontvangen' alleen laat de vraag 'en dan?' open.
+const volgendeStap = computed(() => logboek.value.find(r => r.state === 'verwacht'))
+
+// De opleverdatum leeft in de tijdlijn — dat is de plek voor 'wanneer gebeurt wat'.
+// Het relatieve ('over 8 dagen', '3 dagen te laat') maakt hem meteen bruikbaar.
+function gereedRegel(o: Order): string | undefined {
+  if (!o.verwacht_gereed_datum) return undefined
+  return o.gereed_relatief ? `${o.verwacht_gereed_datum} · ${o.gereed_relatief}` : o.verwacht_gereed_datum
+}
 
 // Goederen aannemen: naar het bevestigingsscherm. Dat scherm registreert de
 // aanname (status ontvangen + start de opleverklok) en toont dat controleren pas
@@ -289,21 +320,4 @@ function paneelMaat(p: PaneelMaat): string {
   return p.omschrijving
 }
 
-function kleurToHex(k: string): string {
-  const l = k.toLowerCase()
-  if (l.includes('zwart') || l.includes('9005') || l.includes('piano')) return '#18181b'
-  if (l.includes('gebroken wit') || l.includes('9001')) return '#f5f0e8'
-  if (l.includes('wit') || l.includes('9003') || l.includes('9016')) return '#f8f8f8'
-  if (l.includes('rood') || l.includes('3020')) return '#dc2626'
-  if (l.includes('blauw') || l.includes('5011')) return '#1d4ed8'
-  if (l.includes('saliegreen') || l.includes('6021')) return '#7aab78'
-  if (l.includes('groen')) return '#15803d'
-  if (l.includes('antraciet') || l.includes('7016')) return '#374151'
-  if (l.includes('grijs') || l.includes('7035')) return '#9ca3af'
-  if (l.includes('taupe') || l.includes('beige')) return '#a89880'
-  if (l.includes('oranje')) return '#ea580c'
-  if (l.includes('petrol') || l.includes('5021')) return '#0e7490'
-  if (l.includes('bn.00.86') || l.includes('sikkens')) return '#c8bfb0'
-  return '#94a3b8'
-}
 </script>

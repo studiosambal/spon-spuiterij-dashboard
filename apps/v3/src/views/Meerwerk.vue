@@ -12,9 +12,9 @@
     <main class="page-content" style="padding-bottom:100px">
 
       <!-- Hoe het werkt -->
-      <div class="alert alert-info">
+      <PMessage severity="info">
 		Is er meerwerk nodig of wijkt iets af van de bestelling? Meld het hier. SpuitwerkOnline neemt contact op met de klant voor akkoord. Je krijgt bericht zodra je verder kunt.
-      </div>
+      </PMessage>
 
       <!-- Open invoerveld — de kern van de melding -->
       <div class="card">
@@ -22,7 +22,7 @@
           <div class="field-label">Wat wijkt af?</div>
           <PTextarea v-model="omschrijving" rows="4"
                      placeholder="Beschrijf kort wat er afwijkt. Bijv. oppervlak valt tegen, of aantallen kloppen niet."
-                     style="width:100%;font-family:inherit;font-size:14px;resize:none" />
+                     style="width:100%;font-family:inherit;font-size:var(--text-base);resize:none" />
         </div>
       </div>
 
@@ -39,7 +39,7 @@
             <i :class="type.icon" style="font-size:15px;flex-shrink:0" />
             <div>
               <div style="font-weight:600">{{ type.label }}</div>
-              <div style="font-size:12px;font-weight:400;opacity:.7;text-transform:none;letter-spacing:0;margin-top:1px">{{ type.desc }}</div>
+              <div style="font-size:var(--text-xs);font-weight:400;opacity:.7;text-transform:none;letter-spacing:0;margin-top:1px">{{ type.desc }}</div>
             </div>
           </button>
         </div>
@@ -51,49 +51,49 @@
           <div class="field-label" style="margin-bottom:12px">Aangepaste panelen</div>
 
           <div v-for="(p, i) in extraPanelen" :key="i"
-               style="background:#f6fafd;border-radius:12px;padding:12px;margin-bottom:10px">
+               style="background:var(--p-surface-50);border-radius:12px;padding:12px;margin-bottom:10px">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-              <span style="font-size:14px;font-weight:600;color:var(--text)">Paneel {{ i + 1 }}</span>
-              <button style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;font-family:inherit"
+              <span style="font-size:var(--text-base);font-weight:600;color:var(--text)">Paneel {{ i + 1 }}</span>
+              <button style="background:none;border:none;color:var(--muted);font-size:var(--text-xs);cursor:pointer;font-family:inherit"
                       @click="extraPanelen.splice(i, 1)">Verwijderen</button>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">
               <div class="field">
                 <div class="field-label">Aantal</div>
                 <PInputText v-model="p.aantal" type="number" placeholder="1"
-                            style="width:100%;font-size:15px;height:44px" />
+                            style="width:100%;font-size:var(--text-base);height:44px" />
               </div>
               <div class="field">
                 <div class="field-label">Breedte</div>
                 <PInputText v-model="p.breedte" type="number" placeholder="cm"
-                            style="width:100%;font-size:15px;height:44px" />
+                            style="width:100%;font-size:var(--text-base);height:44px" />
               </div>
               <div class="field">
                 <div class="field-label">Hoogte</div>
                 <PInputText v-model="p.hoogte" type="number" placeholder="cm"
-                            style="width:100%;font-size:15px;height:44px" />
+                            style="width:100%;font-size:var(--text-base);height:44px" />
               </div>
             </div>
             <div class="field">
               <div class="field-label">Omschrijving</div>
               <PInputText v-model="p.omschrijving" placeholder="bijv. Extra zijpaneel"
-                          style="width:100%;font-size:15px;height:44px" />
+                          style="width:100%;font-size:var(--text-base);height:44px" />
             </div>
           </div>
 
-          <button style="width:100%;border:1.5px dashed var(--border);background:none;border-radius:8px;padding:10px;font-size:14px;font-weight:600;color:var(--primary);cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"
+          <button style="width:100%;border:1.5px dashed var(--border);background:none;border-radius:8px;padding:10px;font-size:var(--text-base);font-weight:600;color:var(--primary);cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"
                   @click="extraPanelen.push({ aantal:'1', breedte:'', hoogte:'', omschrijving:'' })">
             <i class="ti ti-plus" /> Paneel toevoegen
           </button>
 
           <!-- Indicatie meerkosten (definitief bedrag bepaalt SpuitwerkOnline met de klant) -->
           <div v-if="berekendeMeerkosten > 0"
-               style="margin-top:14px;padding:12px 14px;border-radius:12px;background:#f6fafd;display:flex;justify-content:space-between;align-items:center">
+               style="margin-top:14px;padding:12px 14px;border-radius:12px;background:var(--p-surface-50);display:flex;justify-content:space-between;align-items:center">
             <div>
-              <span style="font-size:14px;color:var(--muted)">Indicatie meerkosten</span>
-              <div style="font-size:11px;color:var(--muted);margin-top:1px">SpuitwerkOnline stelt het definitieve bedrag vast</div>
+              <span style="font-size:var(--text-base);color:var(--muted)">Indicatie meerkosten</span>
+              <div style="font-size:var(--text-xs);color:var(--muted);margin-top:1px">SpuitwerkOnline stelt het definitieve bedrag vast</div>
             </div>
-            <span style="font-size:18px;font-weight:700;color:var(--primary)">&euro; {{ formatBedrag(berekendeMeerkosten) }}</span>
+            <span style="font-size:var(--text-lg);font-weight:700;color:var(--primary)">&euro; {{ formatBedrag(berekendeMeerkosten) }}</span>
           </div>
         </div>
       </template>
@@ -107,7 +107,7 @@
               <span>&euro;</span>
               <input v-model="bedrag" type="text" inputmode="decimal" placeholder="0,00" />
             </div>
-            <div style="font-size:12px;color:var(--muted);margin-top:4px">Een richtbedrag voor jouw werk. SpuitwerkOnline bepaalt de definitieve prijs met de klant.</div>
+            <div style="font-size:var(--text-xs);color:var(--muted);margin-top:4px">Een richtbedrag voor jouw werk. SpuitwerkOnline bepaalt de definitieve prijs met de klant.</div>
           </div>
         </div>
       </template>
@@ -117,7 +117,7 @@
     <div class="bottom-bar">
       <PButton label="Melden bij SpuitwerkOnline" icon="ti ti-send"
                :disabled="!kanMelden" @click="meld" />
-      <div v-if="!kanMelden" style="text-align:center;font-size:12px;color:var(--muted);margin-top:2px">
+      <div v-if="!kanMelden" style="text-align:center;font-size:var(--text-xs);color:var(--muted);margin-top:2px">
         Beschrijf eerst kort wat er afwijkt
       </div>
     </div>
@@ -127,10 +127,10 @@
   <div v-else style="min-height:100dvh;display:flex;flex-direction:column">
     <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px;text-align:center">
       <div style="width:80px;height:80px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;margin-bottom:20px">
-        <i class="ti ti-send" style="font-size:36px;color:#fff" />
+        <i class="ti ti-send" style="font-size:36px;color:var(--p-surface-0)" />
       </div>
-      <div style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:8px">Gemeld bij SpuitwerkOnline</div>
-      <div style="font-size:15px;color:var(--muted);line-height:1.5;max-width:300px">
+      <div style="font-size:var(--text-xl);font-weight:700;color:var(--text);margin-bottom:8px">Gemeld bij SpuitwerkOnline</div>
+      <div style="font-size:var(--text-base);color:var(--muted);line-height:1.5;max-width:300px">
         SpuitwerkOnline neemt contact op met de klant, regelt het akkoord en bevestigt het aan jou. Je krijgt bericht zodra je verder kunt.
       </div>
       <div class="card" style="width:100%;text-align:left;margin-top:24px">

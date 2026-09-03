@@ -1,36 +1,36 @@
 <template>
-  <div class="ordercard" role="button" tabindex="0"
+  <div class="ordercard" :style="kaartStyle" role="button" tabindex="0"
        @click="router.push('/order/' + order.id)"
        @keydown.enter.prevent="router.push('/order/' + order.id)"
        @keydown.space.prevent="router.push('/order/' + order.id)">
 
-    <!-- Kop: ordernummer, klant op eigen regel — de fase staat in de groepskop erboven, niet op de kaart -->
-    <div style="padding:12px 14px 10px">
-      <span style="font-family:monospace;font-weight:700;font-size:15px;color:var(--text)">{{ order.id }}</span>
-      <div style="font-size:13px;color:#334155;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ klantPlaats(order) }}</div>
+    <!-- Kop: één rustige regel. Het ordernummer is een referentie, geen titel —
+         de dienstnaam hieronder is de enige vette kop van de kaart. -->
+    <div style="display:flex;align-items:baseline;gap:10px;padding:14px 16px 0;font-size:var(--text-sm);color:var(--muted)">
+      <span style="font-family:monospace;font-weight:600;flex-shrink:0">{{ order.id }}</span>
+      <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ klantPlaats(order) }}</span>
     </div>
-
-    <div style="height:1px;background:var(--hairline)" />
 
     <!-- Body: één rij per dienst -->
     <div v-for="(dienst, di) in order.diensten" :key="di"
-         :style="di > 0 ? { borderTop: '1px solid var(--hairline)' } : {}"
-         style="display:flex;align-items:center;gap:12px;padding:12px 14px">
+         :style="di > 0 ? { marginTop: '2px' } : {}"
+         style="display:flex;align-items:center;gap:14px;padding:12px 16px">
       <div class="oc-thumb">
         <img :src="dienstImage(dienst.naam)" :alt="dienst.naam" />
       </div>
       <div style="min-width:0;flex:1">
         <div class="oc-naam">{{ dienst.naam }}</div>
-        <div style="font-size:13px;color:var(--muted);margin-top:1px">{{ dienstHoeveelheid(dienst) }}</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
-          <span :style="{ display:'inline-block', width:'14px', height:'14px', borderRadius:'4px', flexShrink:0, border:'1px solid rgba(0,0,0,0.18)', background: kleurOnbekend(dienst) ? '#e2e8f0' : kleurToHex(dienst.kleur) }" />
-          <span class="oc-kleur" :style="kleurOnbekend(dienst) ? { fontStyle:'italic' } : {}">{{ dienst.kleur }}</span>
+        <!-- Geen kleurstaal op het dashboard: de hex is een benadering op trefwoord,
+             en meestal is de kleur nog niet bepaald. De exacte kleur staat op het
+             detail- en controlescherm, waar de spuiter hem nodig heeft. -->
+        <div style="font-size:var(--text-sm);color:var(--muted);margin-top:2px">
+          {{ dienstHoeveelheid(dienst) }}<template v-if="!kleurOnbekend(dienst)"> &middot; {{ dienst.kleur }}</template>
         </div>
       </div>
     </div>
 
     <!-- Footer: 'wat nu' — bold werkwoord vooraan, daarna het detail; deadline rechts -->
-    <div :style="footerStyle" style="display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:13px;font-weight:500">
+    <div :style="footerStyle" style="display:flex;align-items:center;gap:8px;padding:11px 16px;font-size:var(--text-sm);font-weight:500">
       <i :class="footer.icon" style="font-size:14px;flex-shrink:0" />
       <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><template v-if="footer.label"><strong style="font-weight:700">{{ footer.label }}:</strong>{{ ' ' }}</template>{{ footer.text }}</span>
       <span v-if="footer.deadline" style="display:inline-flex;align-items:center;gap:5px;flex-shrink:0;font-weight:600">
@@ -58,13 +58,14 @@ function kleurOnbekend(d: Dienst): boolean {
 type FooterKind = 'neutral' | 'accent' | 'warning' | 'success' | 'danger'
 // Kleur is signaal, geen decoratie: grijs voor routine-informatie, en alleen een tint
 // bij een noemenswaardigheid rond deadline of afgeven — rood (te laat), oranje (niet
-// meegeven), groen (mag mee).
+// meegeven), groen (mag mee). De waarden komen uit main.css en dus uit hetzelfde
+// PrimeVue-palet als Tag en Message.
 const FOOTER_TINT: Record<FooterKind, string> = {
-  neutral: 'background:#f1f5f9;color:#475569',
-  accent:  'background:#f1f5f9;color:#075985',
-  warning: 'background:#ffedd5;color:#9a3412',
-  success: 'background:#dcfce7;color:#15803d',
-  danger:  'background:#fee2e2;color:#b91c1c',
+  neutral: 'background:var(--card);color:var(--signaal-rust-fg)',
+  accent:  'background:var(--card);color:var(--signaal-rust-fg)',   // routine-info: grijs, geen kleur
+  warning: 'background:var(--signaal-wacht-bg);color:var(--signaal-wacht-fg)',
+  success: 'background:var(--signaal-klaar-bg);color:var(--signaal-klaar-fg)',
+  danger:  'background:var(--signaal-telaat-bg);color:var(--signaal-telaat-fg)',
 }
 
 // Onderbalk = 'wat moet ik nu weten': bold werkwoord vooraan + detail. Nooit de badge herhalen.
@@ -98,23 +99,25 @@ const footer = computed<{ icon: string; label?: string; text: string; kind: Foot
   }
 })
 
-const footerStyle = computed(() => FOOTER_TINT[footer.value.kind])
-
-function kleurToHex(k: string): string {
-  const l = k.toLowerCase()
-  if (l.includes('zwart') || l.includes('9005') || l.includes('piano')) return '#18181b'
-  if (l.includes('gebroken wit') || l.includes('9001')) return '#f5f0e8'
-  if (l.includes('wit') || l.includes('9003') || l.includes('9016')) return '#f0f0f0'
-  if (l.includes('rood') || l.includes('3020')) return '#dc2626'
-  if (l.includes('blauw') || l.includes('5011')) return '#1d4ed8'
-  if (l.includes('saliegreen') || l.includes('salige') || l.includes('6021')) return '#7aab78'
-  if (l.includes('groen')) return '#15803d'
-  if (l.includes('antraciet') || l.includes('7016')) return '#374151'
-  if (l.includes('grijs') || l.includes('7035')) return '#9ca3af'
-  if (l.includes('taupe') || l.includes('beige')) return '#a89880'
-  if (l.includes('oranje')) return '#ea580c'
-  if (l.includes('petrol') || l.includes('5021')) return '#0e7490'
-  if (l.includes('bn.00.86') || l.includes('sikkens')) return '#c8bfb0'
-  return '#e2e8f0'
+// Bij een signaal kleurt de héle kaartrand mee: de begrenzing van de kaart is
+// precies de plek om te zeggen dat er iets mis is. Routine-kaarten blijven grijs.
+const SIGNAAL_RAND: Partial<Record<FooterKind, string>> = {
+  warning: 'var(--p-orange-300)',
+  success: 'var(--p-green-300)',
+  danger:  'var(--p-red-300)',
 }
+
+const kaartStyle = computed(() => {
+  const rand = SIGNAAL_RAND[footer.value.kind]
+  return rand ? { borderColor: rand } : {}
+})
+
+const footerStyle = computed(() => {
+  // De scheidingslijn volgt de kaartrand, anders loopt er een grijze lijn door een
+  // gekleurde kaart. Volledig in de binding, niet half in het style-attribuut:
+  // een border-shorthand daar overschrijft de kleur uit deze computed.
+  const rand = SIGNAAL_RAND[footer.value.kind] ?? 'var(--hairline)'
+  return `${FOOTER_TINT[footer.value.kind]};border-top:1px solid ${rand}`
+})
+
 </script>

@@ -3,26 +3,24 @@
       <button class="back-btn" @click="router.back()">
         <i class="ti ti-arrow-left" /> Terug
       </button>
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-        <h1 style="font-family:monospace">{{ order?.id }}</h1>
-      </div>
-      <div class="subtitle" style="color:var(--muted)">{{ klantPlaats(order) }}</div>
+      <h1>Ontvangst</h1>
+      <div class="subtitle">{{ klantPlaats(order) }} &middot; <span style="font-family:monospace">{{ order?.id }}</span></div>
     </header>
 
   <div v-if="order" style="min-height:100dvh;display:flex;flex-direction:column">
     <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px;text-align:center">
       <div style="width:80px;height:80px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;margin-bottom:20px">
-        <i class="ti ti-check" style="font-size:36px;color:#fff" />
+        <i class="ti ti-check" style="font-size:36px;color:var(--p-surface-0)" />
       </div>
-      <div style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:8px">Ontvangst bevestigd</div>
+      <div style="font-size:var(--text-xl);font-weight:700;color:var(--text);margin-bottom:8px">Ontvangst bevestigd</div>
 
       <div class="card" style="width:100%;margin-top:32px;text-align:left">
-        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:4px">Wat nu?</div>
-        <div style="font-size:15px;color:var(--text);line-height:1.5">
+        <div style="font-size:var(--text-sm);color:var(--muted);margin-bottom:4px">Wat nu?</div>
+        <div style="font-size:var(--text-base);color:var(--text);line-height:1.5">
 			Je hoeft de order nog niet te controleren. We raden je wel aan foto's te maken, daarmee sta je sterk bij eventuele latere schadeklachten.
         </div>
         <div v-if="order.verwacht_gereed_datum"
-             style="margin-top:12px;padding-top:12px;border-top:1px solid var(--hairline);display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text)">
+             style="margin-top:12px;padding-top:12px;border-top:1px solid var(--hairline);display:flex;align-items:center;gap:8px;font-size:var(--text-base);color:var(--text)">
           <i class="ti ti-flag" style="color:var(--primary);font-size:16px" />
           <span>Opleveren vóór <strong>{{ order.verwacht_gereed_datum }}</strong></span>
         </div>
@@ -41,7 +39,7 @@
   </div>
 
   <div v-else class="page-content">
-    <div class="card" style="color:var(--muted);font-size:14px">Order niet gevonden.</div>
+    <div class="card" style="color:var(--muted);font-size:var(--text-base)">Order niet gevonden.</div>
   </div>
 </template>
 

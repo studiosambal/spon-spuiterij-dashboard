@@ -57,6 +57,14 @@ export interface Order {
   gereed_relatief?: string            // 'indruk' van haast, bv. 'over 8 dagen' / '3 dagen te laat' (fake)
   te_laat?: boolean                   // verwachte opleverdatum overschreden zonder actie
 
+  // Gebeurtenissen — voeden het logboek op de detailpagina. In productie levert
+  // de backend deze; hier worden ze gezet zodra de spuiter een stap bevestigt.
+  controledatum?: string              // controle afgerond, productie gestart
+  meerwerkdatum?: string              // afwijking gemeld bij SpuitwerkOnline
+  gereeddatum?: string                // productie afgerond
+  betaaldatum?: string                // betaling van de klant binnen
+  opgehaalddatum?: string             // goederen mee met klant/vervoerder
+
   // Financieel
   bedrag: number               // orderwaarde voor de spuiter in euros
 
@@ -80,6 +88,21 @@ export const STATUS_LABELS: Record<OrderStatus, string> = {
   productie_gereed:  'Wacht op betaling',
   klaar:             'Klaar voor ophalen',
   afgerond:          'Afgerond'
+}
+
+// Severity voor de PrimeVue-Tag op de detailpagina. Zelfde regel als op het
+// dashboard: kleur is signaal, niet fase-identiteit. Normale voortgang is grijs —
+// anders is de badge het enige verzadigde element op een verder rustige pagina.
+// Oranje = aandacht of geblokkeerd, groen = mag mee met de klant.
+export type StatusSeverity = 'info' | 'warn' | 'success' | 'secondary'
+export const STATUS_SEVERITY: Record<OrderStatus, StatusSeverity> = {
+  bevestigd:         'secondary',
+  ontvangen:         'secondary',
+  in_productie:      'secondary',
+  meerwerk_wacht:    'warn',
+  productie_gereed:  'warn',
+  klaar:             'success',
+  afgerond:          'secondary'
 }
 
 export const STATUS_ORDER: Record<OrderStatus, number> = {
@@ -130,6 +153,52 @@ function opleverdatum(werkdagen: number, vanaf: Date): string {
     if (dag !== 0 && dag !== 6) geteld++
   }
   return datumKort(d)
+}
+
+// ── Logboek ──────────────────────────────────────────────────────────────────
+// Wordt afgeleid uit de order in plaats van apart opgeslagen, zodat hij meegroeit
+// zodra de spuiter in de app een stap bevestigt. In productie levert de backend
+// deze regels; de vorm blijft hetzelfde.
+export interface LogRegel {
+  datum?: string
+  tekst: string
+  state: 'gedaan' | 'nu' | 'verwacht'
+}
+
+export function orderLogboek(o: Order): LogRegel[] {
+  const rang = STATUS_ORDER[o.status]
+  const r: LogRegel[] = []
+
+  if (o.ontvangstdatum) {
+    r.push({ datum: o.ontvangstdatum, tekst: 'Goederen ontvangen', state: 'gedaan' })
+    if (o.beforeFotoGemaakt) r.push({ datum: o.ontvangstdatum, tekst: 'Foto bij ontvangst gemaakt', state: 'gedaan' })
+  } else if (o.verwacht_levering) {
+    const wie = o.aanlevering === 'klant' ? ' door de klant' : o.aanlevering === 'koerier' ? ' via koerier' : ''
+    r.push({ datum: o.verwacht_levering, tekst: `Levering verwacht${wie}`, state: 'verwacht' })
+  }
+
+  if (o.meerwerkdatum) r.push({ datum: o.meerwerkdatum, tekst: 'Afwijking gemeld bij SpuitwerkOnline', state: 'gedaan' })
+  if (o.status === 'meerwerk_wacht') r.push({ tekst: 'Wacht op akkoord van de klant', state: 'nu' })
+
+  if (o.controledatum) r.push({ datum: o.controledatum, tekst: 'Controle afgerond, productie gestart', state: 'gedaan' })
+  if (o.status === 'in_productie') r.push({ tekst: 'In productie', state: 'nu' })
+
+  if (o.gereeddatum) r.push({ datum: o.gereeddatum, tekst: 'Productie afgerond', state: 'gedaan' })
+  else if (o.verwacht_gereed_datum && rang < STATUS_ORDER['productie_gereed']) {
+    r.push({ datum: o.verwacht_gereed_datum, tekst: o.te_laat ? 'Gereed verwacht — datum verstreken' : 'Gereed verwacht', state: 'verwacht' })
+  }
+
+  if (o.status === 'productie_gereed') r.push({ tekst: 'Wacht op betaling van de klant', state: 'nu' })
+  if (o.betaaldatum) r.push({ datum: o.betaaldatum, tekst: 'Betaling ontvangen — mag mee', state: 'gedaan' })
+  if (o.status === 'klaar') r.push({ tekst: 'Klaar voor ophalen', state: 'nu' })
+
+  if (o.opgehaalddatum) r.push({ datum: o.opgehaalddatum, tekst: 'Opgehaald door de klant', state: 'gedaan' })
+  if (o.status === 'afgerond') {
+    r.push(o.uitbetaald
+      ? { datum: o.datum, tekst: 'Uitbetaald', state: 'gedaan' }
+      : { tekst: 'Wacht op uitbetaling', state: 'nu' })
+  }
+  return r
 }
 
 // ── Geometrie: m², strekkende meters en stuks afleiden uit de panelen ──────────
@@ -242,6 +311,7 @@ const orders = ref<Order[]>([
     klant: 'Sophie Bakker', datum: '28 jun', adres: 'Keizersgracht 45, Amsterdam',
     status: 'meerwerk_wacht', betaald: false, uitbetaald: false, bedrag: 420, beforeFotoGemaakt: false,
     ontvangstdatum: 'ma 26 mei', verwacht_gereed_werkdagen: 15, verwacht_gereed_datum: 'ma 16 jun',
+    meerwerkdatum: 'di 27 mei',
     verwacht_levering: 'ma 26 mei',
     product: 'Binnendeuren & trapleuning',
     type_service: 'montage_transport',
@@ -272,6 +342,7 @@ const orders = ref<Order[]>([
     klant: 'Marco Pietersen', datum: '27 jun', adres: 'Binnenhof 8, Den Haag',
     status: 'in_productie', betaald: false, uitbetaald: false, bedrag: 340, beforeFotoGemaakt: true,
     ontvangstdatum: 'do 29 mei', verwacht_gereed_werkdagen: 15, verwacht_gereed_datum: 'do 19 jun', gereed_relatief: '3 dagen te laat', te_laat: true,
+    controledatum: 'vr 30 mei',
     product: 'Trapleuning + spijlen (volledig)',
     type_service: 'alleen_spuitwerk',
     diensten: [
@@ -294,6 +365,7 @@ const orders = ref<Order[]>([
     klant: 'Lisa van den Berg', datum: '26 jun', adres: 'Lijnbaan 22, Rotterdam',
     status: 'in_productie', betaald: false, uitbetaald: false, bedrag: 260, beforeFotoGemaakt: true,
     ontvangstdatum: 'wo 4 jun', verwacht_gereed_werkdagen: 15, verwacht_gereed_datum: 'wo 25 jun', gereed_relatief: 'over 8 dagen',
+    controledatum: 'do 5 jun',
     product: 'Buffetkast - deuren & zijwanden (8 stuks)',
     type_service: 'alleen_spuitwerk',
     diensten: [
@@ -318,6 +390,7 @@ const orders = ref<Order[]>([
     klant: 'Peter Smit', datum: '29 jun', adres: 'Kalverstraat 88, Amsterdam',
     status: 'productie_gereed', betaald: false, uitbetaald: false, bedrag: 720, beforeFotoGemaakt: true,
     ontvangstdatum: 'ma 2 jun', verwacht_gereed_werkdagen: 15, verwacht_gereed_datum: 'ma 23 jun',
+    controledatum: 'di 3 jun', gereeddatum: 'ma 16 jun',
     product: 'Keukendeuren & ladefronten incl. handgreepgaten (24 stuks)',
     type_service: 'alleen_spuitwerk',
     diensten: [
@@ -342,6 +415,7 @@ const orders = ref<Order[]>([
     klant: 'Roos Hendriks', datum: '25 jun', adres: 'Haagse Bluf 3, Utrecht',
     status: 'klaar', betaald: true, uitbetaald: false, bedrag: 140, beforeFotoGemaakt: true,
     ontvangstdatum: 'wo 21 mei', verwacht_gereed_werkdagen: 15, verwacht_gereed_datum: 'wo 11 jun',
+    controledatum: 'do 22 mei', gereeddatum: 'di 10 jun', betaaldatum: 'wo 11 jun',
     product: 'Radiatoren (2 stuks)',
     type_service: 'alleen_spuitwerk',
     diensten: [
@@ -362,6 +436,7 @@ const orders = ref<Order[]>([
     klant: 'Dirk Jansen', datum: '22 jun', adres: 'Molenstraat 7, Haarlem',
     status: 'afgerond', betaald: true, uitbetaald: true, bedrag: 380, beforeFotoGemaakt: true,
     ontvangstdatum: 'ma 12 mei', verwacht_gereed_werkdagen: 15, verwacht_gereed_datum: 'ma 2 jun',
+    controledatum: 'di 13 mei', gereeddatum: 'vr 30 mei', betaaldatum: 'ma 2 jun', opgehaalddatum: 'di 3 jun',
     product: 'Keukendeuren (12 stuks)',
     type_service: 'alleen_spuitwerk',
     diensten: [
@@ -381,6 +456,7 @@ const orders = ref<Order[]>([
     klant: 'Anouk Visser', datum: '19 jun', adres: 'Prins Hendrikstraat 19, Utrecht',
     status: 'afgerond', betaald: true, uitbetaald: false, bedrag: 195, beforeFotoGemaakt: true,
     ontvangstdatum: 'wo 14 mei', verwacht_gereed_werkdagen: 15, verwacht_gereed_datum: 'wo 4 jun',
+    controledatum: 'do 15 mei', gereeddatum: 'di 3 jun', betaaldatum: 'wo 4 jun', opgehaalddatum: 'do 5 jun',
     product: 'Binnendeuren (3 stuks)',
     type_service: 'alleen_spuitwerk',
     diensten: [
@@ -400,6 +476,7 @@ const orders = ref<Order[]>([
     klant: 'Tom de Boer', datum: '15 jun', adres: 'Velperweg 44, Arnhem',
     status: 'afgerond', betaald: true, uitbetaald: false, bedrag: 310, beforeFotoGemaakt: true,
     ontvangstdatum: 'ma 19 mei', verwacht_gereed_werkdagen: 15, verwacht_gereed_datum: 'ma 9 jun',
+    controledatum: 'di 20 mei', gereeddatum: 'vr 6 jun', betaaldatum: 'ma 9 jun', opgehaalddatum: 'di 10 jun',
     product: 'Trapleuning (volledig)',
     type_service: 'alleen_spuitwerk',
     diensten: [
@@ -425,7 +502,15 @@ export function useOrders() {
   }
   function updateStatus(id: string, status: OrderStatus) {
     const o = orders.value.find(o => o.id === id)
-    if (o) o.status = status
+    if (!o) return
+    // Gebeurtenis vastleggen zodat het logboek meegroeit met wat de spuiter doet
+    const nu = datumKort(new Date())
+    if (status === 'in_productie'     && !o.controledatum)  o.controledatum  = nu
+    if (status === 'meerwerk_wacht'   && !o.meerwerkdatum)  o.meerwerkdatum  = nu
+    if (status === 'productie_gereed' && !o.gereeddatum)    o.gereeddatum    = nu
+    if (status === 'klaar'            && !o.betaaldatum)    o.betaaldatum    = nu
+    if (status === 'afgerond'         && !o.opgehaalddatum) o.opgehaalddatum = nu
+    o.status = status
   }
   // Aanname van de goederen: bevestigd → ontvangen. Hier start de opleverklok —
   // 15 werkdagen vanaf nu, vast. De controle (kleur/maten) is een aparte stap erna

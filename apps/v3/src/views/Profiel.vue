@@ -15,9 +15,9 @@
 
         <div class="card" style="padding:16px;cursor:pointer;display:flex;flex-direction:column;justify-content:space-between"
              @click="router.push('/')">
-          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:6px">Actieve orders</div>
-          <div style="font-size:32px;font-weight:700;color:var(--text);line-height:1">{{ actieveOrders }}</div>
-          <div style="font-size:13px;color:var(--muted);margin-top:4px;display:flex;align-items:center;justify-content:space-between">
+          <div style="font-size:var(--text-sm);color:var(--muted);margin-bottom:6px">Actieve orders</div>
+          <div style="font-size:var(--text-3xl);font-weight:700;color:var(--text);line-height:1">{{ actieveOrders }}</div>
+          <div style="font-size:var(--text-sm);color:var(--muted);margin-top:4px;display:flex;align-items:center;justify-content:space-between">
             <span>in behandeling</span>
             <i class="ti ti-arrow-right" style="color:var(--primary);font-size:12px" />
           </div>
@@ -25,24 +25,24 @@
 
         <div class="card" style="padding:16px;cursor:pointer;display:flex;flex-direction:column;justify-content:space-between"
              @click="router.push('/')">
-          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:6px">Afgerond</div>
-          <div style="font-size:32px;font-weight:700;color:var(--text);line-height:1">{{ afgerondOrders }}</div>
-          <div style="font-size:13px;color:var(--muted);margin-top:4px;display:flex;align-items:center;justify-content:space-between">
+          <div style="font-size:var(--text-sm);color:var(--muted);margin-bottom:6px">Afgerond</div>
+          <div style="font-size:var(--text-3xl);font-weight:700;color:var(--text);line-height:1">{{ afgerondOrders }}</div>
+          <div style="font-size:var(--text-sm);color:var(--muted);margin-top:4px;display:flex;align-items:center;justify-content:space-between">
             <span>totaal</span>
             <i class="ti ti-arrow-right" style="color:var(--primary);font-size:12px" />
           </div>
         </div>
 
-        <div class="card" style="padding:16px;border-color:#fde68a;background:#fefce8">
-          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#92400e;margin-bottom:6px">Tegoed</div>
-          <div style="font-size:32px;font-weight:700;color:#92400e;line-height:1">{{ formatEuro(tegoed) }}</div>
-          <div style="font-size:13px;color:#a16207;margin-top:4px">wacht op uitbetaling</div>
+        <div class="card" style="padding:16px">
+          <div style="font-size:var(--text-sm);color:var(--muted);margin-bottom:6px">Tegoed</div>
+          <div style="font-size:var(--text-3xl);font-weight:700;color:var(--p-amber-800);line-height:1">{{ formatEuro(tegoed) }}</div>
+          <div style="font-size:var(--text-sm);color:var(--p-yellow-700);margin-top:4px">wacht op uitbetaling</div>
         </div>
 
-        <div class="card" style="padding:16px;border-color:#bbf7d0;background:#f0fdf4">
-          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#15803d;margin-bottom:6px">Uitbetaald</div>
-          <div style="font-size:32px;font-weight:700;color:#15803d;line-height:1">{{ formatEuro(ontvangen) }}</div>
-          <div style="font-size:13px;color:#16a34a;margin-top:4px">totaal</div>
+        <div class="card" style="padding:16px">
+          <div style="font-size:var(--text-sm);color:var(--muted);margin-bottom:6px">Uitbetaald</div>
+          <div style="font-size:var(--text-3xl);font-weight:700;color:var(--p-green-700);line-height:1">{{ formatEuro(ontvangen) }}</div>
+          <div style="font-size:var(--text-sm);color:var(--p-green-600);margin-top:4px">totaal</div>
         </div>
 
       </div>
@@ -59,13 +59,13 @@
               <img :src="dienstImage(order.product)" :alt="order.product" />
             </div>
             <div style="flex:1;min-width:0">
-              <div style="font-weight:600;font-size:15px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ klantPlaats(order) }}</div>
-              <div style="font-size:13px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ order.product }}</div>
-              <div style="font-size:12px;color:var(--muted);margin-top:2px">{{ order.datum }}</div>
+              <div style="font-weight:600;font-size:var(--text-base);color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ klantPlaats(order) }}</div>
+              <div style="font-size:var(--text-sm);color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ order.product }}</div>
+              <div style="font-size:var(--text-xs);color:var(--muted);margin-top:2px">{{ order.datum }}</div>
             </div>
             <div style="text-align:right;flex-shrink:0">
-              <div style="font-size:17px;font-weight:700;color:#92400e">{{ formatEuro(order.bedrag) }}</div>
-              <div style="font-size:11px;color:#a16207;margin-top:2px">tegoed</div>
+              <div style="font-size:var(--text-lg);font-weight:700;color:var(--p-amber-800)">{{ formatEuro(order.bedrag) }}</div>
+              <div style="font-size:var(--text-xs);color:var(--p-yellow-700);margin-top:2px">tegoed</div>
             </div>
           </div>
         </div>
@@ -83,13 +83,13 @@
               <img :src="dienstImage(order.product)" :alt="order.product" />
             </div>
             <div style="flex:1;min-width:0">
-              <div style="font-weight:600;font-size:15px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ klantPlaats(order) }}</div>
-              <div style="font-size:13px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ order.product }}</div>
-              <div style="font-size:12px;color:var(--muted);margin-top:2px">{{ order.datum }}</div>
+              <div style="font-weight:600;font-size:var(--text-base);color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ klantPlaats(order) }}</div>
+              <div style="font-size:var(--text-sm);color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ order.product }}</div>
+              <div style="font-size:var(--text-xs);color:var(--muted);margin-top:2px">{{ order.datum }}</div>
             </div>
             <div style="text-align:right;flex-shrink:0">
-              <div style="font-size:17px;font-weight:700;color:#15803d">{{ formatEuro(order.bedrag) }}</div>
-              <div style="font-size:11px;color:#16a34a;margin-top:2px;display:flex;align-items:center;gap:3px;justify-content:flex-end">
+              <div style="font-size:var(--text-lg);font-weight:700;color:var(--p-green-700)">{{ formatEuro(order.bedrag) }}</div>
+              <div style="font-size:var(--text-xs);color:var(--p-green-600);margin-top:2px;display:flex;align-items:center;gap:3px;justify-content:flex-end">
                 <i class="ti ti-check" style="font-size:10px" /> uitbetaald
               </div>
             </div>
@@ -103,7 +103,7 @@
         <button style="width:100%;display:flex;align-items:center;gap:12px;padding:16px;background:none;border:none;cursor:pointer;font-family:inherit;text-align:left"
                 @click="router.push('/account')">
           <i class="ti ti-settings" style="font-size:18px;color:var(--muted)" />
-          <span style="flex:1;font-size:15px;font-weight:600;color:var(--text)">Accountinstellingen</span>
+          <span style="flex:1;font-size:var(--text-base);font-weight:600;color:var(--text)">Accountinstellingen</span>
           <i class="ti ti-chevron-right" style="font-size:14px;color:var(--muted)" />
         </button>
       </div>
