@@ -18,7 +18,7 @@
       <button class="section-label"
               style="display:flex;justify-content:space-between;align-items:center;width:100%;background:none;border:none;cursor:pointer;padding:4px 0;min-height:44px;font-family:inherit"
               @click="toonTeOntvangen = !toonTeOntvangen">
-        <span>Te ontvangen ({{ teOntvangenOrders.length }})</span>
+        <span>Binnenkomst verwacht ({{ teOntvangenOrders.length }})</span>
         <i :class="toonTeOntvangen ? 'ti ti-chevron-up' : 'ti ti-chevron-down'" style="color:var(--muted)" />
       </button>
       <template v-if="toonTeOntvangen">

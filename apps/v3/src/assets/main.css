@@ -23,9 +23,10 @@
   --primary-light:  var(--p-primary-50);
   --primary-border: var(--p-primary-200);
 
-  --surface:  var(--p-surface-50);
+  --surface:  var(--p-surface-200);   /* koel grijs, halve verzadiging van het eerder
+                                        afgewezen #dbe4f2 — donkerder zonder paarszweem */
   --card:     var(--p-surface-0);
-  --border:   var(--p-content-border-color);
+  --border:   var(--p-surface-300);   /* een stap donkerder dan het canvas, anders valt de kaartrand weg */
   --hairline: var(--p-surface-100);   /* scheidingslijn bínnen witte kaarten */
   --text:     var(--p-text-color);
   --muted:    var(--p-text-muted-color);
@@ -333,6 +334,8 @@ input::placeholder, textarea::placeholder { color: var(--p-form-field-placeholde
 /* Invoervelden minimaal 16px zodat mobiel niet auto-zoomt bij focus */
 /* Minimaal 1rem, anders zoomt iOS in bij focus. Geen vaste px: schaalt mee. */
 input, textarea, .p-inputtext { font-size: var(--text-base) !important; }
+/* Zoeken is een werkplaatsbediening, dus even groot als de knoppen */
+.p-iconfield .p-inputtext { min-height: 48px; }
 
 /* ── Bottom bar ── */
 .bottom-bar {

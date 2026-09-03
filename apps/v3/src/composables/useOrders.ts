@@ -97,7 +97,7 @@ export interface Order {
 }
 
 export const STATUS_LABELS: Record<OrderStatus, string> = {
-  bevestigd:         'Te ontvangen',
+  bevestigd:         'Binnenkomst verwacht',
   meerwerk_wacht:    'Wacht op akkoord',
   ontvangen:         'Ontvangen',
   in_productie:      'In productie',

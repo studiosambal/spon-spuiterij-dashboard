@@ -41,7 +41,10 @@ const SpuitwerkPreset = definePreset(Lara, {
         // Bewuste afwijking van Lara: donkerder tekst dan de default (surface.700 /
         // surface.500). De spuiter leest op een telefoon in de werkplaats, bij fel
         // of juist slecht licht. Geldt nu ook voor PrimeVue-componenten zelf.
-        text: { color: '{surface.900}', mutedColor: '{surface.600}' }
+        text: { color: '{surface.900}', mutedColor: '{surface.600}' },
+        // Wit op sky-500 haalt 2,8:1 — te weinig voor knoptekst. Op 700 is het
+        // 5,9:1. Dit raakt alleen gevulde vlakken; iconen en links blijven 500.
+        primary: { color: '{primary.700}', hoverColor: '{primary.800}', activeColor: '{primary.800}' }
       }
     }
   },
