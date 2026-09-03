@@ -33,6 +33,9 @@
       <PButton label="Order controleren" icon="ti ti-arrow-right"
                :outlined="!order.beforeFotoGemaakt"
                @click="router.push('/order/' + order.id)" />
+      <button class="tekst-actie" style="align-self:center;margin-top:2px" @click="ongedaanMaken">
+        Toch niet ontvangen? Ongedaan maken
+      </button>
       <PButton label="Naar overzicht" icon="ti ti-home" outlined
                @click="router.push('/')" />
     </div>
@@ -44,19 +47,20 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useOrders, klantPlaats } from '@/composables/useOrders'
 
 const router = useRouter()
 const route  = useRoute()
-const { getOrder, ontvangGoederen } = useOrders()
+const { getOrder, maakOntvangstOngedaan } = useOrders()
 
 const order = computed(() => getOrder(route.params.id as string))
 
-// Registreer de aanname en start de opleverklok. Idempotent: bij een order die
-// al 'ontvangen' is doet dit niets, dus terugkeren naar dit scherm is veilig.
-onMounted(() => {
-  ontvangGoederen(route.params.id as string)
-})
+// Dit scherm bevestigt alleen wat al gebeurd is; de aanname wordt geregistreerd
+// door de knop op de orderpagina. Openen of terugnavigeren wijzigt dus niets.
+function ongedaanMaken() {
+  maakOntvangstOngedaan(route.params.id as string)
+  router.replace('/order/' + route.params.id)
+}
 </script>

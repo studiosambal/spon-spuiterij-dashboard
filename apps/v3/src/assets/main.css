@@ -136,6 +136,13 @@ input::placeholder, textarea::placeholder { color: var(--p-form-field-placeholde
 }
 
 /* ── OrderCard (dashboard) ── */
+/* 'Niet meegeven: betaling ontbreekt' mag nooit in een ellipsis verdwijnen.
+   Maximaal twee regels, daarna pas afbreken. */
+.oc-footer-tekst {
+  flex: 1; min-width: 0;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 .ordercard {
   background: var(--card);
   border: 1px solid var(--border);
@@ -172,6 +179,13 @@ input::placeholder, textarea::placeholder { color: var(--p-form-field-placeholde
    meer lucht boven een kop (14+10) dan eronder (14) */
 .page-content > .section-label { margin-top: 20px; }
 .page-content > .section-label:first-child { margin-top: 0; }
+
+/* Tekstuele actie: geen knop-uiterlijk, wel een echt tapdoel */
+.tekst-actie {
+  background: none; border: none; cursor: pointer;
+  font-family: inherit; font-size: var(--text-sm); font-weight: 600;
+  color: var(--primary); padding: 10px 4px; min-height: 44px;
+}
 
 /* ── Label/waarde-rij ── Eén vorm voor de speclijst in de dienstkaart, de
    statusrij en het overzicht: label links in een vaste kolom, waarde rechts.
@@ -234,6 +248,13 @@ input::placeholder, textarea::placeholder { color: var(--p-form-field-placeholde
 .log-tekst-gedaan   { color: var(--text); }
 .log-tekst-nu       { color: var(--primary); font-weight: 700; }
 .log-tekst-verwacht { color: var(--muted); }
+
+/* Tekstuele actie: geen knop-uiterlijk, wel een echt tapdoel */
+.tekst-actie {
+  background: none; border: none; cursor: pointer;
+  font-family: inherit; font-size: var(--text-sm); font-weight: 600;
+  color: var(--primary); padding: 10px 4px; min-height: 44px;
+}
 
 /* ── Label/waarde-rij ── Eén vorm voor de speclijst in de dienstkaart, de
    statusrij en het overzicht: label links in een vaste kolom, waarde rechts.
@@ -371,6 +392,16 @@ input, textarea, .p-inputtext { font-size: var(--text-base) !important; }
 .check-item-desc      { font-size: var(--text-sm); color: var(--muted); margin-top: 1px; }
 
 /* ── Photo grid ── */
+.foto-tegel { position: relative; aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: var(--p-surface-100); }
+.foto-tegel img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.foto-verwijder {
+  position: absolute; top: 4px; right: 4px;
+  width: 30px; height: 30px; border-radius: 50%;
+  border: none; cursor: pointer;
+  background: rgba(15,23,42,.62); color: var(--p-surface-0);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+}
 .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .photo-thumb {
   aspect-ratio: 1;

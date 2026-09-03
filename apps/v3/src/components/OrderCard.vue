@@ -8,7 +8,7 @@
          de dienstnaam hieronder is de enige vette kop van de kaart. -->
     <div style="display:flex;align-items:baseline;gap:10px;padding:14px 16px 0;font-size:var(--text-sm);color:var(--muted)">
       <span style="font-family:monospace;font-weight:600;flex-shrink:0">{{ order.id }}</span>
-      <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ klantPlaats(order) }}</span>
+      <span style="min-width:0">{{ klantPlaats(order) }}</span>
     </div>
 
     <!-- Body: één rij per dienst -->
@@ -32,7 +32,7 @@
     <!-- Footer: 'wat nu' — bold werkwoord vooraan, daarna het detail; deadline rechts -->
     <div :style="footerStyle" style="display:flex;align-items:center;gap:8px;padding:11px 16px;font-size:var(--text-sm);font-weight:500">
       <i :class="footer.icon" style="font-size:14px;flex-shrink:0" />
-      <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><template v-if="footer.label"><strong style="font-weight:700">{{ footer.label }}:</strong>{{ ' ' }}</template>{{ footer.text }}</span>
+      <span class="oc-footer-tekst"><template v-if="footer.label"><strong style="font-weight:700">{{ footer.label }}:</strong>{{ ' ' }}</template>{{ footer.text }}</span>
       <span v-if="footer.deadline" style="display:inline-flex;align-items:center;gap:5px;flex-shrink:0;font-weight:600">
         <i class="ti ti-flag" style="font-size:13px" />{{ footer.deadline }}
       </span>

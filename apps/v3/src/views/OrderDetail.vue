@@ -35,17 +35,28 @@
         {{ order.opmerkingen }}
       </PMessage>
 
+      <!-- Geblokkeerde status: wie is aan zet, wat is de laatste update, en wat
+           betekent dat voor de opleverdatum. Zonder die drie is 'wachten' geen
+           ontzorging maar onzekerheid. -->
       <PMessage severity="warn" v-if="order.status === 'meerwerk_wacht'">
-        <strong>Wacht op akkoord</strong>
-        We wachten op akkoord van de klant voor het meerwerk. Zodra het akkoord binnen is, kan de productie worden hervat.
+        <strong>Geen actie voor jou</strong>
+        <span v-if="order.meerwerk">
+          {{ order.meerwerk.behandelaar }} is aan zet sinds {{ order.meerwerk.datum }}.
+          {{ order.meerwerk.laatsteUpdate }}. Of de opleverdatum verschuift hoor je van SpuitwerkOnline.
+        </span>
+        <span v-else>
+          SpuitwerkOnline regelt het akkoord met de klant. Zodra dat binnen is kun je verder.
+        </span>
       </PMessage>
       <PMessage severity="info" v-else-if="order.status === 'ontvangen'">
         <strong>Ontvangst bevestigd</strong>
         Controleer de order en start het spuitwerk. Je kunt een foto maken van de binnenkomst.
       </PMessage>
       <PMessage severity="warn" v-else-if="order.status === 'productie_gereed'">
-        <strong>Wachten op betaling</strong>
-        Klant heeft nog niet betaald. Geef de goederen nog niet af. Je ontvangt een melding zodra de betaling is bevestigd.
+        <strong>Geen actie voor jou</strong>
+        De klant heeft nog niet betaald aan SpuitwerkOnline. Geef de goederen daarom nog niet af.
+        SpuitwerkOnline is aan zet<template v-if="order.gereeddatum"> sinds {{ order.gereeddatum }}</template>;
+        je krijgt bericht zodra de betaling binnen is.
       </PMessage>
       <template v-else-if="order.status === 'klaar'">
         <PMessage severity="success">
@@ -225,15 +236,23 @@
 
       <!-- KLAAR: betaling ontvangen, overdracht -->
       <template v-else-if="order.status === 'klaar'">
-        <PButton label="Overhandigd aan klant" icon="ti ti-circle-check"
-                 @click="updateStatus(order.id, 'afgerond'); router.back()" />
+        <!-- Tekst volgt de ophaalmethode: 'overhandigd aan klant' klopt niet
+             als een vervoerder de goederen komt halen. -->
+        <PButton :label="order.ophaalmethode === 'klant' ? 'Overhandigd aan klant' : 'Overgedragen aan vervoerder'"
+                 icon="ti ti-circle-check"
+                 @click="updateStatus(order.id, 'afgerond')" />
       </template>
 
-      <!-- AFGEROND -->
+      <!-- AFGEROND: nog even terug te draaien, één verkeerde tik mag geen order archiveren -->
       <template v-else-if="order.status === 'afgerond'">
-        <div style="text-align:center;padding:8px;font-size:var(--text-sm);color:var(--muted)">
-          <i class="ti ti-circle-check" style="color:var(--primary);margin-right:6px" />
-          Order afgerond
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 2px">
+          <span style="font-size:var(--text-sm);color:var(--muted);display:flex;align-items:center;gap:7px">
+            <i class="ti ti-circle-check" style="color:var(--p-green-700)" />
+            Order afgerond<template v-if="order.opgehaalddatum"> &middot; {{ order.opgehaalddatum }}</template>
+          </span>
+          <button v-if="order.opgehaalddatum" class="tekst-actie" @click="maakOverdrachtOngedaan(order.id)">
+            Ongedaan maken
+          </button>
         </div>
       </template>
 
@@ -257,7 +276,7 @@ import { dienstImage } from '@/lib/dienstImage'
 
 const router = useRouter()
 const route  = useRoute()
-const { getOrder, updateStatus } = useOrders()
+const { getOrder, updateStatus, ontvangGoederen, maakOverdrachtOngedaan } = useOrders()
 
 const order = computed(() => getOrder(route.params.id as string))
 
@@ -287,12 +306,14 @@ function gereedRegel(o: Order): string | undefined {
   return o.gereed_relatief ? `${o.verwacht_gereed_datum} · ${o.gereed_relatief}` : o.verwacht_gereed_datum
 }
 
-// Goederen aannemen: naar het bevestigingsscherm. Dat scherm registreert de
-// aanname (status ontvangen + start de opleverklok) en toont dat controleren pas
-// later hoeft, met de optie meteen een foto te maken.
+// Goederen aannemen. De tik is de handeling: hier wordt de aanname geregistreerd
+// en start de opleverklok. Het scherm erna is een bevestiging van iets dat al is
+// gebeurd — niet de plek waar het alsnog gebeurt. Zo kan het openen (of per
+// ongeluk terugnavigeren naar) een pagina nooit een status wijzigen.
 function ontvangstBevestigen() {
   const o = order.value
   if (!o) return
+  ontvangGoederen(o.id)
   router.push('/order/' + o.id + '/ontvangst')
 }
 

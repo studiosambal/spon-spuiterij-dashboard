@@ -27,21 +27,21 @@
         @change="onCameraCapture"
       />
 
-      <!-- Genomen foto's grid -->
+      <!-- Genomen foto's. De hele tegel aantikken verwijderde de foto — met vieze
+           handen te riskant. Verwijderen kan alleen via de knop, en is terug te
+           draaien zolang je op dit scherm bent. -->
       <div v-if="capturedCount > 0" class="photo-grid">
-        <div v-for="(photo, i) in photos" :key="i"
-             class="photo-thumb captured"
-             style="position:relative"
-             @click="verwijderFoto(i)"
-             :aria-label="`Foto ${i + 1} verwijderen`"
-             role="button">
-          <i class="ti ti-circle-x" style="position:absolute;top:4px;right:4px;font-size:20px;color:var(--p-red-600);background:var(--p-surface-0);border-radius:50%" />
-          <i class="ti ti-photo" style="font-size:22px" />
-          <span class="photo-thumb-label">Foto {{ i + 1 }}</span>
+        <div v-for="(photo, i) in photos" :key="photo.id" class="foto-tegel">
+          <img :src="photo.url" :alt="`Foto ${i + 1}`" />
+          <button class="foto-verwijder" :aria-label="`Foto ${i + 1} verwijderen`"
+                  @click="verwijderFoto(i)">
+            <i class="ti ti-x" />
+          </button>
         </div>
       </div>
-      <div v-if="capturedCount > 0" style="font-size:var(--text-xs);color:var(--muted);margin-top:6px;text-align:center">
-        Tik op een foto om te verwijderen
+      <div v-if="verwijderd" style="display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:var(--text-sm);color:var(--muted)">
+        <span>Foto verwijderd</span>
+        <button class="tekst-actie" @click="herstelFoto">Ongedaan maken</button>
       </div>
 
       <!-- Foto maken knop — prominent, altijd zichtbaar -->
@@ -114,10 +114,12 @@ const order    = computed(() => getOrder(route.params.id as string))
 const isBefore = computed(() => route.params.type === 'before')
 const done     = ref(false)
 
-interface Photo { id: number }
+interface Photo { id: number; url: string }
 const photos      = ref<Photo[]>([])
 const nextId      = ref(1)
 const capturedCount = computed(() => photos.value.length)
+// Laatst verwijderde foto vasthouden zodat één misklik niet je bewijs kost
+const verwijderd  = ref<{ foto: Photo; index: number } | null>(null)
 
 // Camera
 const cameraInput = ref<HTMLInputElement | null>(null)
@@ -127,14 +129,23 @@ function maakFoto() {
 }
 
 function onCameraCapture() {
-  if (cameraInput.value?.files?.length) {
-    photos.value.push({ id: nextId.value++ })
-    cameraInput.value.value = ''
-  }
+  const file = cameraInput.value?.files?.[0]
+  if (!file) return
+  // Echte thumbnail i.p.v. een generiek vakje: de spuiter moet kunnen zien dát
+  // hij het juiste heeft vastgelegd.
+  photos.value.push({ id: nextId.value++, url: URL.createObjectURL(file) })
+  if (cameraInput.value) cameraInput.value.value = ''
 }
 
 function verwijderFoto(i: number) {
-  photos.value.splice(i, 1)
+  const [foto] = photos.value.splice(i, 1)
+  verwijderd.value = { foto, index: i }
+}
+
+function herstelFoto() {
+  if (!verwijderd.value) return
+  photos.value.splice(verwijderd.value.index, 0, verwijderd.value.foto)
+  verwijderd.value = null
 }
 
 function bevestig() {

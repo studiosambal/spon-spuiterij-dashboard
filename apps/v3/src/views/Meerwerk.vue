@@ -1,6 +1,58 @@
 <template>
+  <!-- Al gemeld? Dan toont dit scherm de verzonden melding. 'Bekijk meerwerk'
+       hoort nooit op een leeg formulier uit te komen. -->
+  <div v-if="fase === 'invoer' && bestaandeMelding">
+    <header class="app-header">
+      <button class="back-btn" @click="router.back()">
+        <i class="ti ti-arrow-left" /> Terug
+      </button>
+      <h1>Gemeld meerwerk</h1>
+      <div class="subtitle">{{ klantPlaats(order) }} &middot; <span style="font-family:monospace">{{ order?.id }}</span></div>
+    </header>
+
+    <main class="page-content">
+      <PMessage severity="warn">
+        <strong>Gemeld op {{ bestaandeMelding.datum }}</strong>
+        {{ bestaandeMelding.behandelaar }} is aan zet. {{ bestaandeMelding.laatsteUpdate }}.
+      </PMessage>
+
+      <div class="section-label">Wat je hebt gemeld</div>
+      <div class="card">
+        <div class="detail-row">
+          <span class="label">Omschrijving</span>
+          <span class="value">{{ bestaandeMelding.omschrijving }}</span>
+        </div>
+        <div v-if="bestaandeMelding.categorieen.length" class="detail-row">
+          <span class="label">Categorie</span>
+          <span class="value">{{ bestaandeMelding.categorieen.join(', ') }}</span>
+        </div>
+        <div v-if="bestaandeMelding.extraPanelen.length" class="detail-row">
+          <span class="label">Panelen</span>
+          <span class="value">
+            <span v-for="(pn, i) in bestaandeMelding.extraPanelen" :key="i" style="display:block">
+              {{ pn.aantal }}&times; {{ pn.breedte }}&thinsp;&times;&thinsp;{{ pn.hoogte }} cm<template v-if="pn.omschrijving"> &mdash; {{ pn.omschrijving }}</template>
+            </span>
+          </span>
+        </div>
+        <div v-if="bestaandeMelding.indicatie" class="detail-row">
+          <span class="label">Indicatie</span>
+          <span class="value">{{ formatEuro(bestaandeMelding.indicatie) }}
+            <span style="color:var(--muted)">&mdash; SpuitwerkOnline stelt het bedrag vast</span></span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Opleverdatum</span>
+          <span class="value" style="color:var(--muted)">SpuitwerkOnline laat weten of deze verschuift</span>
+        </div>
+      </div>
+
+      <button class="tekst-actie" style="align-self:center" @click="fase = 'nieuw'">
+        Nog een afwijking melden
+      </button>
+    </main>
+  </div>
+
   <!-- FASE 1: Spuiter meldt de afwijking -->
-  <div v-if="fase === 'invoer'">
+  <div v-else-if="fase === 'invoer' || fase === 'nieuw'">
     <header class="app-header">
       <button class="back-btn" @click="router.back()">
         <i class="ti ti-arrow-left" /> Terug
@@ -168,10 +220,18 @@ import { useOrders, klantPlaats } from '@/composables/useOrders'
 
 const router = useRouter()
 const route  = useRoute()
-const { getOrder, updateStatus } = useOrders()
+const { getOrder, meldMeerwerk } = useOrders()
+
+// Al een melding verstuurd? Dan toont dit scherm die melding, niet een leeg
+// formulier — 'Bekijk meerwerk' hoort te laten zien wát er gemeld is.
+const bestaandeMelding = computed(() => order.value?.meerwerk)
+
+function formatEuro(n: number): string {
+  return '€' + n.toLocaleString('nl-NL')
+}
 const order  = computed(() => getOrder(route.params.id as string))
 
-type Fase = 'invoer' | 'gemeld'
+type Fase = 'invoer' | 'nieuw' | 'gemeld'
 const fase = ref<Fase>('invoer')
 
 // ── Categorieën (optioneel, helpt SpuitwerkOnline standaardiseren) ──
@@ -235,7 +295,14 @@ const kanMelden = computed(() => omschrijving.value.trim().length >= 3)
 
 function meld() {
   if (!kanMelden.value) return
-  updateStatus(route.params.id as string, 'meerwerk_wacht')
+  // De melding hoort bij de order te blijven: de spuiter moet later kunnen
+  // terugzien wát hij gemeld heeft, wanneer, en wie er aan zet is.
+  meldMeerwerk(route.params.id as string, {
+    omschrijving: omschrijving.value.trim(),
+    categorieen: selectedTypes.value.map(id => types.find(t => t.id === id)?.label ?? id),
+    extraPanelen: extraPanelen.value.filter(p => p.breedte || p.hoogte || p.omschrijving),
+    indicatie: berekendeMeerkosten.value > 0 ? berekendeMeerkosten.value : undefined,
+  })
   fase.value = 'gemeld'
 }
 </script>

@@ -39,6 +39,18 @@ export interface Dienst {
   handgreepgaten_aantal: number
 }
 
+export interface MeerwerkPaneel { aantal: string; breedte: string; hoogte: string; omschrijving: string }
+
+export interface MeerwerkMelding {
+  datum: string
+  omschrijving: string
+  categorieen: string[]
+  extraPanelen: MeerwerkPaneel[]
+  indicatie?: number          // indicatie meerkosten; SpuitwerkOnline stelt het bedrag vast
+  behandelaar: string         // wie er nu aan zet is
+  laatsteUpdate: string       // korte status vanuit SpuitwerkOnline
+}
+
 export interface Order {
   id: string
   klant: string
@@ -56,6 +68,10 @@ export interface Order {
   verwacht_gereed_datum?: string      // verwachte opleverdatum (weergave), bv. 'do 19 jun'
   gereed_relatief?: string            // 'indruk' van haast, bv. 'over 8 dagen' / '3 dagen te laat' (fake)
   te_laat?: boolean                   // verwachte opleverdatum overschreden zonder actie
+
+  // Meerwerk — de verzonden melding hoort bij de order te blijven, anders kan de
+  // spuiter niet terugzien wat hij heeft gemeld. 'Bekijk meerwerk' toont dit.
+  meerwerk?: MeerwerkMelding
 
   // Gebeurtenissen — voeden het logboek op de detailpagina. In productie levert
   // de backend deze; hier worden ze gezet zodra de spuiter een stap bevestigt.
@@ -312,6 +328,15 @@ const orders = ref<Order[]>([
     status: 'meerwerk_wacht', betaald: false, uitbetaald: false, bedrag: 420, beforeFotoGemaakt: false,
     ontvangstdatum: 'ma 26 mei', verwacht_gereed_werkdagen: 15, verwacht_gereed_datum: 'ma 16 jun',
     meerwerkdatum: 'di 27 mei',
+    meerwerk: {
+      datum: 'di 27 mei',
+      omschrijving: 'Twee binnendeuren hebben diepe krassen aan de onderzijde. Die moeten eerst geplamuurd en geschuurd worden, anders zie je het door de lak heen.',
+      categorieen: ['Schade aan goederen'],
+      extraPanelen: [],
+      indicatie: 85,
+      behandelaar: 'SpuitwerkOnline',
+      laatsteUpdate: 'Offerte naar de klant gestuurd, wachten op akkoord',
+    },
     verwacht_levering: 'ma 26 mei',
     product: 'Binnendeuren & trapleuning',
     type_service: 'montage_transport',
@@ -534,6 +559,40 @@ export function useOrders() {
       markOntvangen(o)   // een eerste foto telt ook als aanname van de goederen
     }
   }
+  // Ontvangst is een echte handeling, dus ook echt terug te draaien. De opleverklok
+  // start bij ontvangst; die moet dus mee terug.
+  function maakOntvangstOngedaan(id: string) {
+    const o = orders.value.find(o => o.id === id)
+    if (!o || o.status !== 'ontvangen') return
+    o.status = 'bevestigd'
+    o.ontvangstdatum = undefined
+    o.verwacht_gereed_datum = undefined
+    o.verwacht_gereed_werkdagen = undefined
+    o.gereed_relatief = undefined
+  }
+
+  function meldMeerwerk(id: string, melding: Omit<MeerwerkMelding, 'datum' | 'behandelaar' | 'laatsteUpdate'>) {
+    const o = orders.value.find(o => o.id === id)
+    if (!o) return
+    const nu = datumKort(new Date())
+    o.meerwerk = {
+      ...melding,
+      datum: nu,
+      behandelaar: 'SpuitwerkOnline',
+      laatsteUpdate: 'Melding ontvangen, we nemen contact op met de klant',
+    }
+    o.meerwerkdatum = nu
+    o.status = 'meerwerk_wacht'
+  }
+
+  // Overdracht terugdraaien — één verkeerde tik mag geen order archiveren
+  function maakOverdrachtOngedaan(id: string) {
+    const o = orders.value.find(o => o.id === id)
+    if (!o || o.status !== 'afgerond') return
+    o.status = 'klaar'
+    o.opgehaalddatum = undefined
+  }
+
   function updateKleur(id: string, dienstIndex: number, payload: { kleur: string; methode: KleurMethode; recept?: string }) {
     const o = orders.value.find(o => o.id === id)
     const d = o?.diensten[dienstIndex]
@@ -543,5 +602,8 @@ export function useOrders() {
       d.kleur_recept = payload.methode === 'mengverhouding' ? payload.recept : undefined
     }
   }
-  return { orders, getOrder, updateStatus, ontvangGoederen, markBeforeFoto, updateKleur }
+  return {
+    orders, getOrder, updateStatus, ontvangGoederen, markBeforeFoto, updateKleur,
+    maakOntvangstOngedaan, meldMeerwerk, maakOverdrachtOngedaan,
+  }
 }
