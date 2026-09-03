@@ -352,9 +352,8 @@ const totaalVergoeding = computed(() => (order.value ? orderTotaal(order.value) 
 const uitbetalingRegel = computed(() => {
   const o = order.value
   if (!o) return { tekst: '', sub: '' }
-  if (o.uitbetaald)             return { tekst: 'Uitbetaald', sub: '' }
-  if (o.status === 'afgerond')  return { tekst: 'Staat open', sub: 'SpuitwerkOnline betaalt je vergoeding uit' }
-  if (!o.betaald)               return { tekst: 'Volgt na afronding', sub: 'De klant moet eerst betalen' }
+  if (o.uitbetaald)            return { tekst: 'Uitbetaald', sub: '' }
+  if (o.status === 'afgerond') return { tekst: 'Staat open', sub: 'SpuitwerkOnline betaalt je vergoeding uit' }
   return { tekst: 'Volgt na afronding', sub: '' }
 })
 
