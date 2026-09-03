@@ -198,6 +198,37 @@
           <span class="label">Afhalen</span>
           <span class="value">{{ order.ophaalmethode === 'klant' ? 'Door de klant' : 'Door een vervoerder' }}</span>
         </div>
+
+        <!-- Geld hoort bij de order, niet alleen bij het profiel: zonder dit moet je
+             de app uit om te zien wat een order oplevert. Bewust géén voorspelde
+             uitbetaaldatum — die termijn ligt nog niet vast en een datum die niet
+             klopt kost meer vertrouwen dan hij oplevert. -->
+        <div class="detail-row">
+          <span class="label">Vergoeding</span>
+          <span class="value">{{ formatEuro(order.bedrag) }}</span>
+        </div>
+        <div v-if="meerwerkRegel" class="detail-row">
+          <span class="label">Meerwerk</span>
+          <span class="value">
+            <span :style="meerwerkRegel.gedimd ? 'color:var(--muted)' : ''">{{ meerwerkRegel.tekst }}</span>
+            <span v-if="meerwerkRegel.sub" style="display:block;color:var(--muted);font-size:var(--text-sm);margin-top:1px">
+              {{ meerwerkRegel.sub }}
+            </span>
+          </span>
+        </div>
+        <div v-if="totaalVergoeding !== order.bedrag" class="detail-row">
+          <span class="label">Totaal</span>
+          <span class="value" style="font-weight:600">{{ formatEuro(totaalVergoeding) }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Uitbetaling</span>
+          <span class="value">
+            <span :style="order.uitbetaald ? 'color:var(--p-green-700);font-weight:600' : ''">{{ uitbetalingRegel.tekst }}</span>
+            <span v-if="uitbetalingRegel.sub" style="display:block;color:var(--muted);font-size:var(--text-sm);margin-top:1px">
+              {{ uitbetalingRegel.sub }}
+            </span>
+          </span>
+        </div>
       </div>
     </main>
 
@@ -270,7 +301,7 @@ import { useRouter, useRoute } from 'vue-router'
 import {
   useOrders, orderLogboek, STATUS_LABELS, STATUS_SEVERITY,
   TYPE_SERVICE_LABELS, OPPERVLAK_LABELS, GLANSGRAAD_LABELS,
-  dienstHoeveelheid, klantPlaats, type Order, type Dienst, type PaneelMaat
+  dienstHoeveelheid, orderTotaal, klantPlaats, type Order, type Dienst, type PaneelMaat
 } from '@/composables/useOrders'
 import { dienstImage } from '@/lib/dienstImage'
 
@@ -292,6 +323,40 @@ const aanleveringSamenvatting = computed(() => {
 })
 
 const toonTijdlijn = ref(false)
+
+function formatEuro(bedrag: number): string {
+  return '\u20ac' + bedrag.toLocaleString('nl-NL')
+}
+
+// Meerwerk telt pas mee in het totaal als SpuitwerkOnline akkoord heeft van de klant.
+// Tot die tijd is het een aanvraag, geen bedrag waar je op mag rekenen.
+const meerwerkRegel = computed(() => {
+  const m = order.value?.meerwerk
+  if (!m) return null
+  if (m.status === 'akkoord') return {
+    tekst: formatEuro(m.goedgekeurdBedrag ?? m.indicatie ?? 0) + ' \u00b7 goedgekeurd', sub: '', gedimd: false,
+  }
+  if (m.status === 'afgewezen') return {
+    tekst: 'Niet goedgekeurd', sub: 'Dit meerwerk wordt niet vergoed', gedimd: true,
+  }
+  return {
+    tekst: m.indicatie ? formatEuro(m.indicatie) + ' aangevraagd' : 'Aangevraagd',
+    sub: 'SpuitwerkOnline vraagt akkoord aan de klant', gedimd: false,
+  }
+})
+
+const totaalVergoeding = computed(() => (order.value ? orderTotaal(order.value) : 0))
+
+// Geen voorspelde datum: SpuitwerkOnline heeft de uitbetaaltermijn nog niet vastgelegd.
+// Wel altijd duidelijk wie er aan zet is, in woorden die niet lijken op 'klantbetaling'.
+const uitbetalingRegel = computed(() => {
+  const o = order.value
+  if (!o) return { tekst: '', sub: '' }
+  if (o.uitbetaald)             return { tekst: 'Uitbetaald', sub: '' }
+  if (o.status === 'afgerond')  return { tekst: 'Staat open', sub: 'SpuitwerkOnline betaalt je vergoeding uit' }
+  if (!o.betaald)               return { tekst: 'Volgt na afronding', sub: 'De klant moet eerst betalen' }
+  return { tekst: 'Volgt na afronding', sub: '' }
+})
 
 const logboek = computed(() => (order.value ? orderLogboek(order.value) : []))
 

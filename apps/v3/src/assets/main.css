@@ -276,17 +276,6 @@ input::placeholder, textarea::placeholder { color: var(--p-form-field-placeholde
 
 /* Blok bínnen een kaart: mengrecept, panelen. Eigen vlak zodat het als los
    onderdeel leest en niet als zoveelste rij. */
-.subpaneel {
-  background: var(--p-surface-50);
-  border: 1px solid var(--hairline);
-  border-radius: 8px;
-  overflow: hidden;
-}
-.subpaneel-kop {
-  font-size: var(--text-sm); color: var(--muted);
-  padding: 7px 12px;
-  border-bottom: 1px solid var(--hairline);
-}
 
 /* ── Status als uitklapbaar element in het overzicht ── */
 /* De statusrij is een knop, maar leest als elke andere rij */

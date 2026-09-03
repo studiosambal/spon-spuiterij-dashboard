@@ -47,6 +47,9 @@ export interface MeerwerkMelding {
   categorieen: string[]
   extraPanelen: MeerwerkPaneel[]
   indicatie?: number          // indicatie meerkosten; SpuitwerkOnline stelt het bedrag vast
+  status: 'wacht' | 'akkoord' | 'afgewezen'
+  besluitdatum?: string       // wanneer de klant akkoord gaf of afwees
+  goedgekeurdBedrag?: number  // pas gevuld als SpuitwerkOnline akkoord heeft van de klant
   behandelaar: string         // wie er nu aan zet is
   laatsteUpdate: string       // korte status vanuit SpuitwerkOnline
 }
@@ -101,7 +104,7 @@ export const STATUS_LABELS: Record<OrderStatus, string> = {
   meerwerk_wacht:    'Wacht op akkoord',
   ontvangen:         'Ontvangen',
   in_productie:      'In productie',
-  productie_gereed:  'Wacht op betaling',
+  productie_gereed:  'Wacht op klantbetaling',
   klaar:             'Klaar voor ophalen',
   afgerond:          'Afgerond'
 }
@@ -193,7 +196,14 @@ export function orderLogboek(o: Order): LogRegel[] {
     r.push({ datum: o.verwacht_levering, tekst: `Levering verwacht${wie}`, state: 'verwacht' })
   }
 
-  if (o.meerwerkdatum) r.push({ datum: o.meerwerkdatum, tekst: 'Afwijking gemeld bij SpuitwerkOnline', state: 'gedaan' })
+  const mw = o.meerwerk
+  if (mw || o.meerwerkdatum) {
+    r.push({ datum: mw?.datum ?? o.meerwerkdatum, tekst: 'Afwijking gemeld bij SpuitwerkOnline', state: 'gedaan' })
+    // De uitkomst hoort in het log: zonder die regel blijft 'goedgekeurd' in het
+    // overzicht een bedrag zonder moment waarop het is toegezegd.
+    if (mw?.status === 'akkoord')   r.push({ datum: mw.besluitdatum, tekst: 'Klant akkoord, meerwerk goedgekeurd', state: 'gedaan' })
+    if (mw?.status === 'afgewezen') r.push({ datum: mw.besluitdatum, tekst: 'Klant niet akkoord, meerwerk vervalt', state: 'gedaan' })
+  }
   if (o.status === 'meerwerk_wacht') r.push({ tekst: 'Wacht op akkoord van de klant', state: 'nu' })
 
   if (o.controledatum) r.push({ datum: o.controledatum, tekst: 'Controle afgerond, productie gestart', state: 'gedaan' })
@@ -204,17 +214,24 @@ export function orderLogboek(o: Order): LogRegel[] {
     r.push({ datum: o.verwacht_gereed_datum, tekst: o.te_laat ? 'Gereed verwacht — datum verstreken' : 'Gereed verwacht', state: 'verwacht' })
   }
 
-  if (o.status === 'productie_gereed') r.push({ tekst: 'Wacht op betaling van de klant', state: 'nu' })
-  if (o.betaaldatum) r.push({ datum: o.betaaldatum, tekst: 'Betaling ontvangen — mag mee', state: 'gedaan' })
+  if (o.status === 'productie_gereed') r.push({ tekst: 'Wacht op betaling door de klant', state: 'nu' })
+  if (o.betaaldatum) r.push({ datum: o.betaaldatum, tekst: 'Klant heeft betaald — mag mee', state: 'gedaan' })
   if (o.status === 'klaar') r.push({ tekst: 'Klaar voor ophalen', state: 'nu' })
 
   if (o.opgehaalddatum) r.push({ datum: o.opgehaalddatum, tekst: 'Opgehaald door de klant', state: 'gedaan' })
   if (o.status === 'afgerond') {
     r.push(o.uitbetaald
-      ? { datum: o.datum, tekst: 'Uitbetaald', state: 'gedaan' }
-      : { tekst: 'Wacht op uitbetaling', state: 'nu' })
+      ? { tekst: 'Jouw vergoeding is uitbetaald', state: 'gedaan' }
+      : { tekst: 'Wacht op jouw uitbetaling', state: 'nu' })
   }
   return r
+}
+
+// Wat de order oplevert. Meerwerk telt pas mee als SpuitwerkOnline akkoord heeft
+// van de klant; een aanvraag is geen bedrag waar de spuiter op mag rekenen.
+export function orderTotaal(o: Order): number {
+  const m = o.meerwerk
+  return o.bedrag + (m?.status === 'akkoord' ? (m.goedgekeurdBedrag ?? m.indicatie ?? 0) : 0)
 }
 
 // ── Geometrie: m², strekkende meters en stuks afleiden uit de panelen ──────────
@@ -334,6 +351,7 @@ const orders = ref<Order[]>([
       categorieen: ['Schade aan goederen'],
       extraPanelen: [],
       indicatie: 85,
+      status: 'wacht',
       behandelaar: 'SpuitwerkOnline',
       laatsteUpdate: 'Offerte naar de klant gestuurd, wachten op akkoord',
     },
@@ -391,6 +409,18 @@ const orders = ref<Order[]>([
     status: 'in_productie', betaald: false, uitbetaald: false, bedrag: 260, beforeFotoGemaakt: true,
     ontvangstdatum: 'wo 4 jun', verwacht_gereed_werkdagen: 15, verwacht_gereed_datum: 'wo 25 jun', gereed_relatief: 'over 8 dagen',
     controledatum: 'do 5 jun',
+    meerwerk: {
+      datum: 'do 5 jun',
+      omschrijving: 'Twee zijwanden waren aan de achterkant niet geschuurd. Extra voorbehandeling nodig.',
+      categorieen: ['Schade aan goederen'],
+      extraPanelen: [],
+      indicatie: 60,
+      status: 'akkoord',
+      goedgekeurdBedrag: 60,
+      besluitdatum: 'do 5 jun',
+      behandelaar: 'SpuitwerkOnline',
+      laatsteUpdate: 'Klant is akkoord, het meerwerk is goedgekeurd',
+    },
     product: 'Buffetkast - deuren & zijwanden (8 stuks)',
     type_service: 'alleen_spuitwerk',
     diensten: [
@@ -571,13 +601,14 @@ export function useOrders() {
     o.gereed_relatief = undefined
   }
 
-  function meldMeerwerk(id: string, melding: Omit<MeerwerkMelding, 'datum' | 'behandelaar' | 'laatsteUpdate'>) {
+  function meldMeerwerk(id: string, melding: Omit<MeerwerkMelding, 'datum' | 'behandelaar' | 'laatsteUpdate' | 'status' | 'goedgekeurdBedrag'>) {
     const o = orders.value.find(o => o.id === id)
     if (!o) return
     const nu = datumKort(new Date())
     o.meerwerk = {
       ...melding,
       datum: nu,
+      status: 'wacht',
       behandelaar: 'SpuitwerkOnline',
       laatsteUpdate: 'Melding ontvangen, we nemen contact op met de klant',
     }

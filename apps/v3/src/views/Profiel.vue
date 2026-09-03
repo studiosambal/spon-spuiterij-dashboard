@@ -64,7 +64,7 @@
               <div style="font-size:var(--text-xs);color:var(--muted);margin-top:2px">{{ order.datum }}</div>
             </div>
             <div style="text-align:right;flex-shrink:0">
-              <div style="font-size:var(--text-lg);font-weight:700;color:var(--p-amber-800)">{{ formatEuro(order.bedrag) }}</div>
+              <div style="font-size:var(--text-lg);font-weight:700;color:var(--p-amber-800)">{{ formatEuro(orderTotaal(order)) }}</div>
               <div style="font-size:var(--text-xs);color:var(--p-yellow-700);margin-top:2px">tegoed</div>
             </div>
           </div>
@@ -88,7 +88,7 @@
               <div style="font-size:var(--text-xs);color:var(--muted);margin-top:2px">{{ order.datum }}</div>
             </div>
             <div style="text-align:right;flex-shrink:0">
-              <div style="font-size:var(--text-lg);font-weight:700;color:var(--p-green-700)">{{ formatEuro(order.bedrag) }}</div>
+              <div style="font-size:var(--text-lg);font-weight:700;color:var(--p-green-700)">{{ formatEuro(orderTotaal(order)) }}</div>
               <div style="font-size:var(--text-xs);color:var(--p-green-600);margin-top:2px;display:flex;align-items:center;gap:3px;justify-content:flex-end">
                 <i class="ti ti-check" style="font-size:10px" /> uitbetaald
               </div>
@@ -115,7 +115,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { useOrders, klantPlaats } from '@/composables/useOrders'
+import { useOrders, orderTotaal, klantPlaats } from '@/composables/useOrders'
 import { useAuth } from '@/composables/useAuth'
 import { dienstImage } from '@/lib/dienstImage'
 
@@ -134,13 +134,13 @@ const afgerondOrders = computed(() =>
 const tegoed = computed(() =>
   orders.value
     .filter(o => o.status === 'afgerond' && !o.uitbetaald)
-    .reduce((sum, o) => sum + o.bedrag, 0)
+    .reduce((sum, o) => sum + orderTotaal(o), 0)
 )
 
 const ontvangen = computed(() =>
   orders.value
     .filter(o => o.uitbetaald)
-    .reduce((sum, o) => sum + o.bedrag, 0)
+    .reduce((sum, o) => sum + orderTotaal(o), 0)
 )
 
 const teOntvangenUitbetaling = computed(() =>

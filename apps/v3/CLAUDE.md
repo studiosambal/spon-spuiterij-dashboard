@@ -37,6 +37,14 @@ bevestigd → (meerwerk_wacht) → ontvangen → in_productie → productie_gere
   - **`ontvangen` → `in_productie` = Controle** (`Controle.vue`): later, at the start of spraying, the spuiter checks colour and panel counts, then confirms to start production. The spuiter **no longer sets the lead time** — the expected completion date was already fixed at receipt (15 workdays); Controle only verifies colour/measurements. Confirming starts production. Deviations are reported via Meerwerk.
 - **Meerwerk / afwijking melden**: reporting runs through SpuitwerkOnline (office arranges customer approval); the spuiter never confirms customer approval themselves. **Only offered during the controle window** (status `ontvangen` — both the Controle screen and the OrderDetail footer link). Once production starts (`in_productie`) the footer link disappears: deviations must be caught at controle, not after. (Note: this slightly overrides Robert's earlier "discoverable during sanding/prep" rationale — a deliberate product choice by Patrick.)
 
+### Geld per order
+
+`OrderDetail` toont onderin het Overzicht wat de order oplevert: **Vergoeding** (`order.bedrag`), **Meerwerk**, **Totaal** en **Uitbetaling**. Zonder dit moet de spuiter de order uit om te zien wat hij verdient.
+
+- Meerwerk telt **pas mee in het totaal als de klant akkoord is** (`meerwerk.status === 'akkoord'`). Tot dat moment staat er "€85 aangevraagd" met de toelichting dat SpuitwerkOnline akkoord vraagt — een aanvraag is geen bedrag waar je op mag rekenen. `orderTotaal()` in `useOrders.ts` is de enige plek waar dit wordt gerekend; `Profiel.vue` gebruikt dezelfde functie, zodat de bedragen op beide pagina's niet uiteen kunnen lopen.
+- Er staat **bewust geen (verwachte) uitbetaaldatum**. SpuitwerkOnline heeft de uitbetaaltermijn nog niet vastgelegd, en Robert waarschuwde dat een uitbetaaldatum die niet klopt meer vertrouwen kost dan hij oplevert. De rij zegt daarom alleen wie er aan zet is: *Volgt na afronding* → *Staat open* → *Uitbetaald*. Ook het logboek noemt geen uitbetaaldatum meer (dat gebruikte eerder `order.datum`, de órderdatum). Zodra de termijn vaststaat kan hier een datum bij.
+- **Betaling vs uitbetaling** worden uit elkaar gehouden in de copy: "Wacht op klantbetaling" (klant → SpuitwerkOnline) tegenover "Wacht op jouw uitbetaling" (SpuitwerkOnline → spuiter).
+
 ### Routing
 
 `src/router/index.ts` uses **history mode** (`createWebHistory(import.meta.env.BASE_URL)`), so routes resolve under the version base (e.g. `/v3/order/123`). Netlify SPA-fallback for deep links is configured in the root `netlify.toml`.

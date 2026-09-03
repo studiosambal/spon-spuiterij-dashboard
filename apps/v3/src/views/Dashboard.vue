@@ -98,7 +98,7 @@ const FASE_GROEPEN: { status: OrderStatus; titel: string }[] = [
   { status: 'ontvangen',        titel: 'Te controleren' },
   { status: 'meerwerk_wacht',   titel: 'Wacht op akkoord' },
   { status: 'in_productie',     titel: 'In productie' },
-  { status: 'productie_gereed', titel: 'Wacht op betaling' },
+  { status: 'productie_gereed', titel: 'Wacht op klantbetaling' },
   { status: 'klaar',            titel: 'Klaar voor ophalen' },
 ]
 
