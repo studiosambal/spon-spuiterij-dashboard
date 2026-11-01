@@ -1,5 +1,5 @@
 # Netlify-config voor de SpuitwerkOnline spuiter-dashboard monorepo.
-# Bouwt v1 (apps/v1), v2 (apps/v2) en v3 (apps/v3) plus een landingspagina naar dist/.
+# Bouwt v1 (apps/v1) t/m v4 (apps/v4) plus een landingspagina naar dist/.
 
 [build]
   command = "npm run build"
@@ -24,4 +24,9 @@
 [[redirects]]
   from = "/v3/*"
   to = "/v3/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/v4/*"
+  to = "/v4/index.html"
   status = 200

@@ -1,20 +1,21 @@
 # SpuitwerkOnline – Spuiterdashboard
 
-Een mobiel-eerst webapp waarmee spuiters van SpuitwerkOnline hun opdrachten beheren: van productinname en foto's tot meerwerk melden en oplevering. Gebouwd voor gebruik op de smartphone in de werkplaats (max. 430px breed).
+Een mobiel-eerst webapp waarmee spuiters van SpuitwerkOnline hun opdrachten beheren: van productinname en foto's tot meerwerk melden en oplevering. Gebouwd voor gebruik op de smartphone in de werkplaats; v1 t/m v3 zijn alleen mobiel (max. 430px), v4 is responsive tot desktop.
 
 > **Demo / prototype** — er is (nog) geen backend. Alle data is mock-data in het geheugen. Een refresh zet alles terug naar de uitgangssituatie.
 
-## Twee versies naast elkaar
+## Versies naast elkaar
 
-Deze repo is een **monorepo** met twee zelfstandige versies van het ontwerpvoorstel, zodat je ze makkelijk kunt vergelijken:
+Deze repo is een **monorepo** met zelfstandige versies van het ontwerpvoorstel, zodat je ze makkelijk kunt vergelijken:
 
 | Versie | Map | Live op | Rol |
 |--------|-----|---------|-----|
 | **v1** | `apps/v1/` | `/v1` | Bevroren eerder voorstel |
 | **v2** | `apps/v2/` | `/v2` | Bevroren tweede voorstel |
-| **v3** | `apps/v3/` | `/v3` | Nieuwste voorstel (hierin wordt doorontwikkeld) |
+| **v3** | `apps/v3/` | `/v3` | Bevroren derde voorstel (alleen mobiel) |
+| **v4** | `apps/v4/` | `/v4` | Nieuwste voorstel: v3 responsive gemaakt voor tablet en desktop (hierin wordt doorontwikkeld) |
 
-De hoofd-URL (`/`) toont een kleine **landingspagina** (`landing/`) met een keuze tussen v1 en v2. Beide versies delen via npm-workspaces één `node_modules` — je installeert dus maar één keer.
+De hoofd-URL (`/`) toont een kleine **landingspagina** (`landing/`) met een keuze uit de versies. Alle versies delen via npm-workspaces één `node_modules` — je installeert dus maar één keer.
 
 ## Tech stack
 
@@ -34,6 +35,7 @@ npm install        # alle dependencies in één keer (workspaces, gedeelde node_
 npm run dev:v2     # dev-server voor v2 op http://localhost:5174
 npm run dev:v3     # dev-server voor v3 op http://localhost:5175
 npm run dev:v1     # dev-server voor v1 op http://localhost:5173
+npm run dev:v4     # dev-server voor v4 op http://localhost:5176
 ```
 
 Je werkt doorgaans aan één versie tegelijk. Open de URL op je telefoon (of versmal je browser tot ±430px) voor de bedoelde weergave.
@@ -45,7 +47,8 @@ Je werkt doorgaans aan één versie tegelijk. Open de URL op je telefoon (of ver
 | `npm run dev:v1` | Dev-server voor v1 (poort 5173, hot reload) |
 | `npm run dev:v2` | Dev-server voor v2 (poort 5174, hot reload) |
 | `npm run dev:v3` | Dev-server voor v3 (poort 5175, hot reload) |
-| `npm run build` | Bouwt v1 → `dist/v1`, v2 → `dist/v2`, v3 → `dist/v3` en de landing → `dist/index.html` |
+| `npm run dev:v4` | Dev-server voor v4 (poort 5176, hot reload) |
+| `npm run build` | Bouwt v1 t/m v4 → `dist/v1` … `dist/v4` en de landing → `dist/index.html` |
 
 Per versie kun je ook losse scripts draaien met `npm run <script> -w v1` (of `-w v2`).
 
@@ -54,10 +57,11 @@ Per versie kun je ook losse scripts draaien met `npm run <script> -w v1` (of `-w
 Netlify bouwt vanaf branch `main` met `npm run build` en publiceert de map `dist`. Configuratie staat in `netlify.toml` (build-commando, publish-map, Node-versie, en SPA-redirects per versie). Resultaat:
 
 ```
-/        → landingspagina (keuze v1 / v2)
+/        → landingspagina (keuze uit de versies)
 /v1      → versie 1
 /v2      → versie 2
 /v3      → versie 3
+/v4      → versie 4
 ```
 
 ## Projectstructuur
@@ -68,7 +72,9 @@ apps/
 │   ├── src/
 │   ├── index.html
 │   └── vite.config.ts
-└── v2/                  # Nieuwste voorstel (base /v2/) — kopie van v1 als startpunt
+├── v2/                  # Bevroren tweede voorstel (base /v2/)
+├── v3/                  # Bevroren derde voorstel (base /v3/)
+└── v4/                  # Nieuwste, responsive voorstel (base /v4/) — kopie van v3 als startpunt
 landing/index.html       # Keuzepagina op /
 scripts/assemble-landing.mjs   # Kopieert landing/ naar dist/ tijdens de build
 netlify.toml             # Build- en deployconfig
