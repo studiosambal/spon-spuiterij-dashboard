@@ -798,6 +798,18 @@ input, textarea, .p-inputtext { font-size: var(--text-base) !important; }
 .od-tl-datum { font-size: var(--text-sm); color: var(--muted); margin-top: 1px; }
 .od-tl.is-nu .od-tl-tekst { color: var(--primary); font-weight: 500; }
 .od-tl.is-later .od-tl-tekst { color: var(--muted); }
+/* Voortgang: twee lijstjes zonder lijntje of datums (voorstel E) */
+.od-voortgang { padding: 14px 16px 8px; }
+.od-voortgang .od-tijdlijn { padding: 0; margin: 0 0 8px; }
+.od-voortgang .od-tl { grid-template-columns: 20px 1fr auto; align-items: center; padding: 6px 0; }
+.od-voortgang .od-tl::before { display: none; }
+.od-vg-kop { font-size: var(--text-sm); font-weight: 600; color: var(--muted); margin: 0 0 4px; }
+.od-tijdlijn + .od-vg-kop { border-top: 1px solid var(--hairline); padding-top: 12px; margin-top: 4px; }
+.od-slot { display: inline-flex; align-items: center; gap: 4px; font-size: var(--text-xs); font-weight: 600; padding: 2px 8px; border-radius: 99px; white-space: nowrap; }
+.od-slot i { font-size: 12px; }
+.od-slot.is-open  { background: var(--p-green-50); color: var(--signaal-klaar-fg); }
+.od-slot.is-dicht { background: var(--p-red-50); color: var(--p-red-700); }
+.od-slot.is-wacht { background: var(--p-surface-100); color: var(--muted); }
 
 /* ════════════════════════════════════════════════════════════════════════
    Responsive

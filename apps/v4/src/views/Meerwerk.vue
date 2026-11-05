@@ -32,12 +32,16 @@
             </span>
           </span>
         </div>
+        <div v-if="bestaandeMelding.specificaties" class="detail-row">
+          <span class="label">Specificaties</span>
+          <span class="value">{{ bestaandeMelding.specificaties }}</span>
+        </div>
         <div v-if="bestaandeMelding.overig" class="detail-row">
           <span class="label">Overige</span>
           <span class="value">{{ bestaandeMelding.overig }}</span>
         </div>
         <div v-if="bestaandeMelding.omschrijving" class="detail-row">
-          <span class="label">Staat van het werk</span>
+          <span class="label">Huidige afwerking</span>
           <span class="value">{{ bestaandeMelding.omschrijving }}</span>
         </div>
         <div v-if="bestaandeMelding.indicatie" class="detail-row">
@@ -89,79 +93,10 @@
         </ul>
       </div>
 
-      <!-- Aantallen: dezelfde regels als bij de controle, nu met plus en min.
-           De spuiter geeft alleen de telling door; SpuitwerkOnline prijst het. -->
-      <div v-if="gekozen('aantal')" class="card">
-        <div style="font-weight:700;font-size:var(--text-base)">Aantallen</div>
-        <div style="margin-top:2px;font-size:var(--text-sm);color:var(--muted)">Pas aan wat je echt hebt geteld.</div>
-
-        <template v-for="(dienst, di) in order.diensten" :key="di">
-          <div v-if="order.diensten.length > 1" class="regel-dienst">{{ dienst.naam }}</div>
-          <ul class="regels">
-            <li v-for="(p, i) in dienst.panelen" :key="i"
-                :class="['regel', { gewijzigd: geteld(di, i) !== p.aantal }]">
-              <span class="regel-wat">
-                {{ regelNaam(p, i) }}
-                <span v-if="regelMaat(p)" class="regel-maat tnum">{{ regelMaat(p) }}</span>
-                <span v-if="geteld(di, i) !== p.aantal" class="regel-was tnum">was {{ p.aantal }}</span>
-              </span>
-              <span class="teller" role="group" :aria-label="`Aantal ${regelNaam(p, i)}`">
-                <button type="button" :disabled="geteld(di, i) === 0" aria-label="Eén minder"
-                        @click="zetGeteld(di, i, geteld(di, i) - 1)"><i class="ti ti-minus" /></button>
-                <output>{{ geteld(di, i) }}</output>
-                <button type="button" aria-label="Eén meer"
-                        @click="zetGeteld(di, i, geteld(di, i) + 1)"><i class="ti ti-plus" /></button>
-              </span>
-            </li>
-          </ul>
-        </template>
-      </div>
-
-      <!-- Extra items: iets dat niet in de bestelling stond, dus met afmetingen -->
-      <div v-if="gekozen('extra')" class="card">
-        <div style="font-weight:700;font-size:var(--text-base)">Extra items</div>
-        <div style="margin-top:2px;font-size:var(--text-sm);color:var(--muted)">Wat zit erbij dat niet besteld is?</div>
-        <div v-for="(it, i) in extraItems" :key="'x' + i"
-             style="background:var(--p-surface-50);border-radius:var(--radius);padding:12px;margin-top:10px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-            <span style="font-size:var(--text-base);font-weight:600;color:var(--text)">Extra item {{ i + 1 }}</span>
-            <button style="background:none;border:none;color:var(--muted);font-size:var(--text-xs);cursor:pointer;font-family:inherit;min-height:44px"
-                    @click="extraItems.splice(i, 1)">Verwijderen</button>
-          </div>
-          <div class="field" style="margin-bottom:8px">
-            <div class="field-label">Wat is het?</div>
-            <PInputText v-model="it.omschrijving" placeholder="bijv. Extra zijpaneel"
-                        style="width:100%;font-size:var(--text-base);height:44px" />
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-            <div class="field">
-              <div class="field-label">Aantal</div>
-              <PInputText v-model="it.aantal" type="number" inputmode="numeric" placeholder="1"
-                          style="width:100%;font-size:var(--text-base);height:44px" />
-            </div>
-            <div class="field">
-              <div class="field-label">Breedte</div>
-              <PInputText v-model="it.breedte" type="number" inputmode="numeric" placeholder="cm"
-                          style="width:100%;font-size:var(--text-base);height:44px" />
-            </div>
-            <div class="field">
-              <div class="field-label">Hoogte</div>
-              <PInputText v-model="it.hoogte" type="number" inputmode="numeric" placeholder="cm"
-                          style="width:100%;font-size:var(--text-base);height:44px" />
-            </div>
-          </div>
-        </div>
-
-        <button style="width:100%;margin-top:10px;border:1.5px dashed var(--border);background:none;border-radius:8px;padding:10px;min-height:44px;font-size:var(--text-base);font-weight:600;color:var(--primary);cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"
-                @click="extraItems.push({ aantal: '1', breedte: '', hoogte: '', omschrijving: '' })">
-          <i class="ti ti-plus" /> Nog een extra item
-        </button>
-      </div>
-
       <!-- Staat van het werk: ondergrond of huidige afwerking vraagt extra werk.
            Hier geeft de spuiter zelf zijn prijs op, met een foto als bewijs voor de klant. -->
       <div v-if="gekozen('staat')" class="card">
-        <div style="font-weight:700;font-size:var(--text-base)">Staat van het werk</div>
+        <div style="font-weight:700;font-size:var(--text-base)">Huidige afwerking is anders</div>
 
         <div class="field" style="margin-top:12px">
           <div class="field-label">Wat zie je?</div>
@@ -205,6 +140,82 @@
         </template>
       </div>
 
+      <!-- Specificaties: de hele configuratie in beeld, zodat de spuiter aanwijst wat niet
+           klopt. Aantallen met plus en min, de rest (maten, soort, materiaal) in woorden,
+           en wat niet besteld is als extra item. SpuitwerkOnline prijst het zelf. -->
+      <div v-if="gekozen('spec')" class="card">
+        <div style="font-weight:700;font-size:var(--text-base)">Specificaties</div>
+        <div style="margin-top:2px;font-size:var(--text-sm);color:var(--muted)">Zo is het besteld. Pas aan wat niet klopt.</div>
+
+        <template v-for="(dienst, di) in order.diensten" :key="di">
+          <div class="regel-dienst">{{ dienst.naam }}</div>
+          <div style="font-size:var(--text-sm);color:var(--muted)">
+            {{ OPPERVLAK_LABELS[dienst.oppervlaktemateriaal] }} &middot; {{ dienst.zijdig }} &middot; {{ dienst.kleur }}
+          </div>
+          <ul class="regels">
+            <li v-for="(p, i) in dienst.panelen" :key="i"
+                :class="['regel', { gewijzigd: geteld(di, i) !== p.aantal }]">
+              <span class="regel-wat">
+                {{ regelNaam(p, i) }}
+                <span v-if="regelMaat(p)" class="regel-maat tnum">{{ regelMaat(p) }}</span>
+                <span v-if="geteld(di, i) !== p.aantal" class="regel-was tnum">was {{ p.aantal }}</span>
+              </span>
+              <span class="teller" role="group" :aria-label="`Aantal ${regelNaam(p, i)}`">
+                <button type="button" :disabled="geteld(di, i) === 0" aria-label="Eén minder"
+                        @click="zetGeteld(di, i, geteld(di, i) - 1)"><i class="ti ti-minus" /></button>
+                <output>{{ geteld(di, i) }}</output>
+                <button type="button" aria-label="Eén meer"
+                        @click="zetGeteld(di, i, geteld(di, i) + 1)"><i class="ti ti-plus" /></button>
+              </span>
+            </li>
+          </ul>
+        </template>
+
+        <div class="field" style="margin-top:12px">
+          <div class="field-label">Wat klopt er verder niet? <span style="color:var(--muted)">(als dat zo is)</span></div>
+          <PTextarea v-model="specTekst" rows="2"
+                     placeholder="Bijv. deur is 4 cm breder, het is eiken in plaats van MDF"
+                     style="width:100%;font-family:inherit;font-size:var(--text-base);resize:none" />
+        </div>
+
+        <!-- Iets dat niet in de bestelling stond, dus met afmetingen -->
+        <div v-for="(it, i) in extraItems" :key="'x' + i"
+             style="background:var(--p-surface-50);border-radius:var(--radius);padding:12px;margin-top:10px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <span style="font-size:var(--text-base);font-weight:600;color:var(--text)">Extra item {{ i + 1 }}</span>
+            <button style="background:none;border:none;color:var(--muted);font-size:var(--text-xs);cursor:pointer;font-family:inherit;min-height:44px"
+                    @click="extraItems.splice(i, 1)">Verwijderen</button>
+          </div>
+          <div class="field" style="margin-bottom:8px">
+            <div class="field-label">Wat is het?</div>
+            <PInputText v-model="it.omschrijving" placeholder="bijv. Extra zijpaneel"
+                        style="width:100%;font-size:var(--text-base);height:44px" />
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+            <div class="field">
+              <div class="field-label">Aantal</div>
+              <PInputText v-model="it.aantal" type="number" inputmode="numeric" placeholder="1"
+                          style="width:100%;font-size:var(--text-base);height:44px" />
+            </div>
+            <div class="field">
+              <div class="field-label">Breedte</div>
+              <PInputText v-model="it.breedte" type="number" inputmode="numeric" placeholder="cm"
+                          style="width:100%;font-size:var(--text-base);height:44px" />
+            </div>
+            <div class="field">
+              <div class="field-label">Hoogte</div>
+              <PInputText v-model="it.hoogte" type="number" inputmode="numeric" placeholder="cm"
+                          style="width:100%;font-size:var(--text-base);height:44px" />
+            </div>
+          </div>
+        </div>
+
+        <button style="width:100%;margin-top:10px;border:1.5px dashed var(--border);background:none;border-radius:8px;padding:10px;min-height:44px;font-size:var(--text-base);font-weight:600;color:var(--primary);cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"
+                @click="extraItems.push({ aantal: '1', breedte: '', hoogte: '', omschrijving: '' })">
+          <i class="ti ti-plus" /> {{ extraItems.length ? 'Nog een extra item' : 'Er zit iets extra bij' }}
+        </button>
+      </div>
+
       <!-- Overige: alles wat niet in de andere hokjes past. Vrije tekst, en meerkosten
            als die er zijn — zo hoeft niemand een afwijking in een verkeerd hokje te
            proppen om er een prijs bij te kunnen zetten. -->
@@ -213,7 +224,7 @@
         <div class="field" style="margin-top:12px">
           <div class="field-label">Wat wijkt er af?</div>
           <PTextarea v-model="overig" rows="3"
-                     placeholder="Bijv. kleurcode onduidelijk, deur is 4 cm breder dan opgegeven"
+                     placeholder="Bijv. kleurcode onduidelijk"
                      style="width:100%;font-family:inherit;font-size:var(--text-base);resize:none" />
         </div>
         <div class="field" style="margin-top:12px">
@@ -269,12 +280,16 @@
               <span v-for="(it, i) in ingevuldeItems" :key="i" style="display:block">{{ itemTekst(it) }}</span>
             </span>
           </div>
+          <div v-if="heeftSpecTekst" class="detail-row">
+            <span class="label">Specificaties</span>
+            <span class="value">{{ specTekst.trim() }}</span>
+          </div>
           <div v-if="heeftOverig" class="detail-row">
             <span class="label">Overige</span>
             <span class="value">{{ overig.trim() }}</span>
           </div>
           <div v-if="heeftStaat" class="detail-row">
-            <span class="label">Staat van het werk</span>
+            <span class="label">Huidige afwerking</span>
             <span class="value">{{ omschrijving }}</span>
           </div>
           <div v-if="totaalKosten > 0" class="detail-row">
@@ -292,9 +307,9 @@
 
 <script setup lang="ts">
 import Kruimelpad from '@/components/Kruimelpad.vue'
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useOrders, klantPlaats, regelNaam, regelMaat, type AantalWijziging, type MeerwerkPaneel } from '@/composables/useOrders'
+import { useOrders, klantPlaats, regelNaam, regelMaat, OPPERVLAK_LABELS, type AantalWijziging, type MeerwerkPaneel } from '@/composables/useOrders'
 import { useMuis } from '@/composables/useMuis'
 
 const router = useRouter()
@@ -322,19 +337,15 @@ function itemTekst(it: MeerwerkPaneel): string {
 }
 
 // ── Wat wijkt er af: bepaalt welke kaarten het formulier toont ──
-type Soort = 'aantal' | 'extra' | 'staat' | 'overig'
+// Volgorde volgens Robert (5 nov): afwerking eerst, dan specificaties, overig als laatste
+type Soort = 'staat' | 'spec' | 'overig'
 const KEUZES: { id: Soort; titel: string; uitleg: string }[] = [
-  { id: 'aantal', titel: 'Aantallen kloppen niet',  uitleg: 'Meer of minder dan besteld' },
-  { id: 'extra',  titel: 'Er zit iets extra bij',    uitleg: 'Iets dat niet in de bestelling staat' },
-  { id: 'staat',  titel: 'Staat van het werk',       uitleg: 'Ondergrond of afwerking vraagt extra werk' },
-  { id: 'overig', titel: 'Overige',                  uitleg: 'Iets anders, zoals kleur of maten' },
+  { id: 'staat',  titel: 'Huidige afwerking is anders', uitleg: 'Vraagt extra werk, bijvoorbeeld door folie of oude lak' },
+  { id: 'spec',   titel: 'Specificaties kloppen niet',  uitleg: 'Aantal, maten, soort of materiaal' },
+  { id: 'overig', titel: 'Overige',                     uitleg: 'Iets anders, zoals de kleur' },
 ]
 const soorten = ref<Soort[]>([])
 const gekozen = (s: Soort) => soorten.value.includes(s)
-// Aangevinkt 'extra'? Zet er meteen een leeg item klaar, dan hoeft niemand eerst te zoeken.
-watch(() => gekozen('extra'), aan => {
-  if (aan && extraItems.value.length === 0) extraItems.value.push({ aantal: '1', breedte: '', hoogte: '', omschrijving: '' })
-})
 
 // ── Aantallen: telling per orderregel, start op het bestelde aantal ──
 const tellingen = ref<Record<string, number>>({})
@@ -346,7 +357,7 @@ function zetGeteld(di: number, i: number, n: number) {
 }
 const aantalWijzigingen = computed<AantalWijziging[]>(() => {
   const o = order.value
-  if (!o || !gekozen('aantal')) return []
+  if (!o || !gekozen('spec')) return []
   return o.diensten.flatMap((d, di) => d.panelen.flatMap((p, i) => {
     const n = geteld(di, i)
     if (n === p.aantal) return []
@@ -357,9 +368,13 @@ const aantalWijzigingen = computed<AantalWijziging[]>(() => {
 
 // ── Extra items: niet besteld, dus met afmetingen ──
 const extraItems = ref<MeerwerkPaneel[]>([])
-const ingevuldeItems = computed(() => !gekozen('extra') ? [] :
+const ingevuldeItems = computed(() => !gekozen('spec') ? [] :
   extraItems.value.filter(it => it.omschrijving.trim() || it.breedte || it.hoogte)
 )
+
+// ── Specificaties in woorden: maten, soort, materiaal ──
+const specTekst      = ref('')
+const heeftSpecTekst = computed(() => gekozen('spec') && specTekst.value.trim().length >= 3)
 
 // ── Staat van het werk: omschrijving, foto en wat de spuiter extra rekent ──
 const omschrijving = ref('')
@@ -393,11 +408,11 @@ const totaalKosten = computed(() => (heeftStaat.value ? bedragNum.value : 0) + o
 // Eén reden tegelijk, in de volgorde waarin de spuiter het formulier doorloopt.
 const blokkade = computed<string | null>(() => {
   if (!soorten.value.length) return 'Vink aan wat er afwijkt'
-  if (gekozen('aantal') && !aantalWijzigingen.value.length) return 'Pas een aantal aan'
-  if (gekozen('extra') && !ingevuldeItems.value.length) return 'Vul het extra item in'
   if (gekozen('staat') && !heeftStaat.value) return 'Beschrijf wat je ziet'
   if (gekozen('staat') && aantalFotos.value === 0) return 'Voeg een foto toe van wat je ziet'
   if (gekozen('staat') && bedragNum.value <= 0) return 'Vul je geschatte meerkosten in'
+  if (gekozen('spec') && !aantalWijzigingen.value.length && !ingevuldeItems.value.length && !heeftSpecTekst.value)
+    return 'Geef aan wat er niet klopt'
   if (gekozen('overig') && !heeftOverig.value) return 'Beschrijf wat er afwijkt'
   return null
 })
@@ -409,6 +424,7 @@ function meld() {
   meldMeerwerk(route.params.id as string, {
     aantallen: aantalWijzigingen.value,
     extraItems: ingevuldeItems.value,
+    specificaties: heeftSpecTekst.value ? specTekst.value.trim() : undefined,
     overig: heeftOverig.value ? overig.value.trim() : undefined,
     overigKosten: overigNum.value > 0 ? overigNum.value : undefined,
     omschrijving: heeftStaat.value ? omschrijving.value.trim() : undefined,

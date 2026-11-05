@@ -86,7 +86,7 @@ const footer = computed<{ icon: string; label?: string; text: string; kind: Foot
     case 'meerwerk_wacht':
       return { icon: 'ti ti-send', label: 'Gemeld', text: 'kantoor regelt akkoord met de klant', kind: 'neutral' }
     case 'in_productie':
-      return { icon: 'ti ti-calendar', label: 'Gereed', text: o.gereed_relatief ?? o.verwacht_gereed_datum ?? 'nog te plannen', kind: 'neutral' }
+      return { icon: 'ti ti-calendar', label: 'Gereed', text: (o.gereed_relatief ?? o.verwacht_gereed_datum ?? 'nog te plannen') + (o.betaald ? ', klant heeft betaald' : ''), kind: 'neutral' }
     case 'productie_gereed':
       return { icon: 'ti ti-ban', label: 'Nog niet meegeven', text: 'betaling ontbreekt', kind: 'danger' }
     case 'klaar':

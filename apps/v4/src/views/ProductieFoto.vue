@@ -82,6 +82,7 @@
         <section class="od-stap" role="status">
           <div class="od-stap-actie">
             <div v-if="isBefore" class="od-stap-tekst">Vastgelegd hoe het binnenkwam. Dat helpt bij schadevragen.</div>
+            <div v-else-if="order?.status === 'klaar'" class="od-stap-tekst">Bedankt! De klant heeft al betaald, dus het mag meteen mee.</div>
             <div v-else class="od-stap-tekst">Bedankt! Wij vragen de klant om te betalen. Meegeven kan zodra dat binnen is.</div>
           </div>
         </section>
@@ -148,7 +149,8 @@ function bevestig() {
   if (isBefore.value) {
     markBeforeFoto(id)   // foto bij ontvangst: bevestigd → ontvangen
   } else {
-    updateStatus(id, 'productie_gereed')
+    // Klant al betaald? Dan mag het meteen mee, anders eerst wachten op de betaling
+    updateStatus(id, getOrder(id)?.betaald ? 'klaar' : 'productie_gereed')
   }
   done.value = true
 }

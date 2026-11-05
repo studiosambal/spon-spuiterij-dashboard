@@ -52,6 +52,7 @@ export interface MeerwerkMelding {
   datum: string
   aantallen: AantalWijziging[]
   extraItems: MeerwerkPaneel[]
+  specificaties?: string      // wat er verder niet klopt aan de configuratie (maten, soort, materiaal)
   overig?: string             // overige afwijking (bv. kleur of maten): wat de spuiter ziet
   overigKosten?: number       // geschatte meerkosten bij 'overige', als die er zijn
   omschrijving?: string       // staat van het werk: wat de spuiter ziet
@@ -112,6 +113,7 @@ export interface Order {
   meerwerkdatum?: string              // afwijking gemeld bij SpuitwerkOnline
   gereeddatum?: string                // productie afgerond
   betaaldatum?: string                // betaling van de klant binnen
+  betaaldVoorGereed?: boolean         // klant betaalde al tijdens productie; betaling en productie lopen los
   opgehaalddatum?: string             // goederen mee met klant/vervoerder
 
   // Financieel
@@ -243,15 +245,16 @@ export function orderLogboek(o: Order): LogRegel[] {
   for (const w of o.datumWijzigingen ?? []) {
     r.push({ datum: w.gemeld, tekst: `Nieuwe opleverdatum doorgegeven: ${w.nieuw}`, state: 'gedaan' })
   }
+  if (o.betaaldVoorGereed && o.betaaldatum) r.push({ datum: o.betaaldatum, tekst: 'Klant heeft betaald', state: 'gedaan' })
   if (o.status === 'in_productie') r.push({ tekst: 'In productie', state: 'nu' })
 
-  if (o.gereeddatum) r.push({ datum: o.gereeddatum, tekst: 'Productie afgerond', state: 'gedaan' })
+  if (o.gereeddatum) r.push({ datum: o.gereeddatum, tekst: 'Gereed gemeld', state: 'gedaan' })
   else if (o.verwacht_gereed_datum && rang < STATUS_ORDER['productie_gereed']) {
     r.push({ datum: o.verwacht_gereed_datum, tekst: o.te_laat ? 'Gereed verwacht, datum verstreken' : 'Gereed verwacht', state: 'verwacht' })
   }
 
   if (o.status === 'productie_gereed') r.push({ tekst: 'Wacht op betaling door de klant', state: 'nu' })
-  if (o.betaaldatum) r.push({ datum: o.betaaldatum, tekst: 'Klant heeft betaald, mag mee', state: 'gedaan' })
+  if (o.betaaldatum && !o.betaaldVoorGereed) r.push({ datum: o.betaaldatum, tekst: 'Klant heeft betaald', state: 'gedaan' })
   if (o.status === 'klaar') r.push({ tekst: 'Klaar voor ophalen', state: 'nu' })
 
   if (o.opgehaalddatum) r.push({ datum: o.opgehaalddatum, tekst: 'Opgehaald door de klant', state: 'gedaan' })
@@ -453,9 +456,9 @@ const orders = ref<Order[]>([
   {
     id: 'SOL-2025-004',
     klant: 'Lisa van den Berg', datum: '26 jun', adres: 'Lijnbaan 22, Rotterdam',
-    status: 'in_productie', betaald: false, uitbetaald: false, bedrag: 260, beforeFotoGemaakt: true,
+    status: 'in_productie', betaald: true, uitbetaald: false, bedrag: 260, beforeFotoGemaakt: true,
     ontvangstdatum: 'wo 4 jun', verwacht_gereed_werkdagen: 15, verwacht_gereed_datum: 'wo 25 jun', gereed_relatief: 'over 8 dagen',
-    controledatum: 'do 5 jun',
+    controledatum: 'do 5 jun', betaaldatum: 'vr 6 jun', betaaldVoorGereed: true,
     meerwerk: {
       datum: 'do 5 jun',
       omschrijving: 'Twee zijwanden waren aan de achterkant niet geschuurd. Extra voorbehandeling nodig.',
@@ -612,6 +615,8 @@ export function useOrders() {
     if (status === 'meerwerk_wacht'   && !o.meerwerkdatum)  o.meerwerkdatum  = nu
     if (status === 'productie_gereed' && !o.gereeddatum)    o.gereeddatum    = nu
     if (status === 'klaar'            && !o.betaaldatum)    o.betaaldatum    = nu
+    if (status === 'klaar'            && !o.gereeddatum)    o.gereeddatum    = nu   // al betaald: gereed melden gaat direct naar 'mag mee'
+    if (status === 'klaar') o.betaald = true
     if (status === 'afgerond'         && !o.opgehaalddatum) o.opgehaalddatum = nu
     o.status = status
   }

@@ -134,6 +134,13 @@
                 <span class="label">Afhalen</span>
                 <span class="value">{{ order.ophaalmethode === 'klant' ? 'Door de klant' : 'Door een vervoerder' }}</span>
               </div>
+              <!-- Betaling loopt los van de productie: de klant kan al eerder betalen -->
+              <div v-if="order.status !== 'afgerond'" class="detail-row">
+                <span class="label">Betaling klant</span>
+                <span class="value" :style="order.betaald ? 'color:var(--signaal-klaar-fg);font-weight:600' : ''">
+                  {{ order.betaald ? 'Betaald' : 'Nog niet betaald' }}<span v-if="order.betaald && order.betaaldatum" class="od-sub">op {{ order.betaaldatum }}</span>
+                </span>
+              </div>
               <!-- Meerwerk dat (nog) niet meetelt: wel noemen, niet optellen -->
               <div v-if="meerwerkOpen" class="detail-row">
                 <span class="label">Meerwerk</span>
@@ -149,35 +156,46 @@
                 </span>
               </div>
             </div>
-            <!-- Wat krijg ik uitbetaald? Vergoeding plus goedgekeurd meerwerk, opgeteld.
-                 Bewust géén voorspelde uitbetaaldatum: die termijn ligt nog niet vast. -->
+            <!-- Orderwaarde = wat de klant betaalt voor het spuitwerk (Robert, 5 nov): spuiter en
+                 klant praten zo over hetzelfde bedrag en de marge komt niet ter sprake. -->
             <dl class="od-bedragen">
               <template v-if="meerwerkBedrag">
-                <div class="od-bedrag"><dt>Vergoeding</dt><dd>{{ formatEuro(order.bedrag) }}</dd></div>
+                <div class="od-bedrag"><dt>Orderwaarde</dt><dd>{{ formatEuro(order.bedrag) }}</dd></div>
                 <div class="od-bedrag"><dt>Goedgekeurd meerwerk</dt><dd>+ {{ formatEuro(meerwerkBedrag) }}</dd></div>
-                <div class="od-bedrag is-totaal"><dt>Totale vergoeding</dt><dd>{{ formatEuro(orderTotaal(order)) }}</dd></div>
+                <div class="od-bedrag is-totaal"><dt>Totale orderwaarde</dt><dd>{{ formatEuro(orderTotaal(order)) }}</dd></div>
               </template>
-              <div v-else class="od-bedrag is-totaal"><dt>Vergoeding</dt><dd>{{ formatEuro(order.bedrag) }}</dd></div>
+              <div v-else class="od-bedrag is-totaal"><dt>Orderwaarde</dt><dd>{{ formatEuro(order.bedrag) }}</dd></div>
             </dl>
           </div>
         </div>
 
         <aside class="detail-zij">
-          <!-- Activiteit: alleen echte processtappen. Een overschreden datum is een
-               waarschuwing bij 'nu', geen stap — die staat bovenaan in het paneel. -->
-          <h2 class="section-label">Activiteit</h2>
-          <div class="card" style="padding:0">
-            <ol class="od-tijdlijn">
-              <li v-for="(regel, i) in tijdlijn" :key="i" class="od-tl" :class="'is-' + regel.state">
-                <span class="od-tl-bol" aria-hidden="true">
-                  <i v-if="regel.state === 'gedaan'" class="ti ti-check" />
-                </span>
-                <div>
-                  <div class="od-tl-tekst">{{ regel.tekst }}</div>
-                  <div v-if="regel.datum" class="od-tl-datum">{{ regel.datum }}</div>
-                </div>
-              </li>
-            </ol>
+          <!-- Voortgang (voorstel E, 5 nov): gedaan = wat er gebeurd is, zonder datums;
+               nog te doen = alleen het werk van de spuiter. De betaling loopt los: die
+               komt bij gedaan zodra hij binnen is, en telt alleen mee als slot op meegeven. -->
+          <h2 class="section-label">Voortgang</h2>
+          <div class="card od-voortgang">
+            <template v-if="gedaan.length">
+              <h3 class="od-vg-kop">Gedaan</h3>
+              <ul class="od-tijdlijn">
+                <li v-for="(t, i) in gedaan" :key="i" class="od-tl is-gedaan">
+                  <span class="od-tl-bol" aria-hidden="true"><i class="ti ti-check" /></span>
+                  <span class="od-tl-tekst">{{ t }}</span>
+                </li>
+              </ul>
+            </template>
+            <template v-if="nogTeDoen.length">
+              <h3 class="od-vg-kop">Nog te doen</h3>
+              <ul class="od-tijdlijn">
+                <li v-for="(s, i) in nogTeDoen" :key="i" class="od-tl" :class="s.nu ? 'is-nu' : 'is-later'">
+                  <span class="od-tl-bol" aria-hidden="true" />
+                  <span class="od-tl-tekst">{{ s.tekst }}</span>
+                  <span v-if="s.slot" class="od-slot" :class="'is-' + s.slot.soort">
+                    <i :class="s.slot.soort === 'open' ? 'ti ti-lock-open' : s.slot.soort === 'dicht' ? 'ti ti-lock' : 'ti ti-clock'" aria-hidden="true" />{{ s.slot.tekst }}
+                  </span>
+                </li>
+              </ul>
+            </template>
           </div>
         </aside>
       </div>
@@ -257,7 +275,9 @@ const stap = computed<Stap>(() => {
     case 'in_productie':
       return o.te_laat
         ? { toon: 'telaat', feit: opleverFeit.value, tekst: 'De opleverdatum is verstreken. Meld de order gereed zodra hij klaar is.' }
-        : { toon: 'rust',   feit: opleverFeit.value, tekst: 'Klaar met spuiten? Meld de order gereed met een foto van het resultaat.' }
+        : { toon: 'rust',   feit: opleverFeit.value, tekst: o.betaald
+            ? 'De klant heeft al betaald. Meld de order gereed met een foto, dan mag hij meteen mee.'
+            : 'Klaar met spuiten? Meld de order gereed met een foto van het resultaat.' }
     case 'productie_gereed':
       return {
         toon: 'stop', feit: o.gereeddatum ? { label: 'Gereed gemeld', waarde: o.gereeddatum } : undefined,
@@ -288,7 +308,9 @@ const stapB = computed<{ titel: string; tekst: string }>(() => {
     case 'meerwerk_wacht':   return { titel: 'Wacht op akkoord van de klant', tekst: stap.value.tekst }
     case 'in_productie':     return o.te_laat
       ? { titel: 'Gereed melden', tekst: 'Maak een foto van het resultaat zodra de order klaar is.' }
-      : { titel: 'Gereed melden', tekst: 'Klaar met spuiten? Maak een foto van het resultaat, dan vragen wij de klant om te betalen.' }
+      : { titel: 'Gereed melden', tekst: o.betaald
+          ? 'De klant heeft al betaald. Maak een foto van het resultaat, dan mag het meteen mee.'
+          : 'Klaar met spuiten? Maak een foto van het resultaat, dan vragen wij de klant om te betalen.' }
     case 'productie_gereed': return { titel: 'Nog niet meegeven', tekst: stap.value.tekst }
     case 'klaar':            return { titel: 'Mag mee met de klant', tekst: stap.value.tekst }
     case 'afgerond':         return { titel: 'Afgerond', tekst: stap.value.tekst }
@@ -333,24 +355,29 @@ function ontvangstBevestigen() {
   router.push('/order/' + o.id + '/ontvangst')
 }
 
-// ── Tijdlijn: wat er gebeurd is, wat er nu speelt, en de stappen die nog komen ──
-interface TijdlijnRegel { datum?: string; tekst: string; state: 'gedaan' | 'nu' | 'later' }
-const tijdlijn = computed<TijdlijnRegel[]>(() => {
+// ── Voortgang: gedaan (uit het logboek, zonder datums) en nog te doen ──
+const gedaan = computed<string[]>(() =>
+  order.value ? orderLogboek(order.value).filter(r => r.state === 'gedaan').map(r => r.tekst) : []
+)
+interface Stap2 { tekst: string; nu?: boolean; slot?: { soort: 'open' | 'dicht' | 'wacht'; tekst: string } }
+const nogTeDoen = computed<Stap2[]>(() => {
   const o = order.value
   if (!o) return []
-  // Een verwachte gereeddatum is geen stap maar een deadline; die staat bovenaan.
-  const gebeurd = orderLogboek(o).filter(r => !r.tekst.startsWith('Gereed verwacht'))
   const rang = STATUS_ORDER[o.status]
-  const later = (tekst: string): TijdlijnRegel => ({ tekst, state: 'later' })
-  const nog: TijdlijnRegel[] = []
-  if (rang < STATUS_ORDER.in_productie)     nog.push(later(o.status === 'meerwerk_wacht' ? 'Productie starten' : 'Controle en start productie'))
-  if (rang < STATUS_ORDER.productie_gereed) nog.push(later('Gereed melden'))
-  // Bij 'wacht op klantbetaling' staat de betaling al als 'nu' in het logboek
-  if (rang < STATUS_ORDER.productie_gereed) nog.push(later('Klant betaalt SpuitwerkOnline'))
-  if (rang < STATUS_ORDER.afgerond)         nog.push(later(o.ophaalmethode === 'klant' ? 'Ophalen door de klant' : 'Ophalen door de vervoerder'))
-  if (rang < STATUS_ORDER.afgerond)         nog.push(later('Uitbetaling van je vergoeding'))
-  // 'Levering verwacht' is bij een nog niet ontvangen order de eerstvolgende stap
-  return [...gebeurd.map((r): TijdlijnRegel => ({ ...r, state: r.state === 'verwacht' ? 'later' : r.state })), ...nog]
+  const r: Stap2[] = []
+  if (o.status === 'bevestigd') r.push({ tekst: 'Ontvangst bevestigen', nu: true })
+  if (rang < STATUS_ORDER.in_productie) r.push(o.status === 'meerwerk_wacht'
+    ? { tekst: 'Productie starten', slot: { soort: 'wacht', tekst: 'wacht op akkoord klant' } }
+    : { tekst: 'Controle', nu: o.status === 'ontvangen' })
+  if (rang < STATUS_ORDER.productie_gereed) r.push({ tekst: 'Gereed melden', nu: o.status === 'in_productie' })
+  // Het slot verschijnt pas als het ertoe doet: zodra de klant betaald heeft, of het werk gereed is
+  if (rang < STATUS_ORDER.afgerond) r.push({
+    tekst: o.ophaalmethode === 'klant' ? 'Meegeven aan de klant' : 'Meegeven aan de vervoerder',
+    nu: o.status === 'klaar',
+    slot: o.betaald ? { soort: 'open', tekst: 'betaald' }
+        : rang >= STATUS_ORDER.productie_gereed ? { soort: 'dicht', tekst: 'wacht op betaling' } : undefined,
+  })
+  return r
 })
 
 // ── Geld ──
