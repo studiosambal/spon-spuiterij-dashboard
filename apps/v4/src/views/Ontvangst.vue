@@ -49,6 +49,15 @@
                    @click="router.push('/order/' + order.id + '/foto/before')" />
         </div>
         <div class="ont-stap">
+          <span class="ont-stap-icoon" aria-hidden="true"><i class="ti ti-printer" /></span>
+          <span class="ont-stap-tekst">
+            <span class="ont-stap-titel">Werkbon bij de spullen</span>
+            <span class="ont-stap-uitleg">Dan weet iedereen bij welke order ze horen.</span>
+          </span>
+          <PButton label="Werkbon printen" icon="ti ti-printer" outlined class="ont-stap-knop"
+                   @click="router.push('/order/' + order.id + '/werkbon')" />
+        </div>
+        <div class="ont-stap">
           <span class="ont-stap-icoon" aria-hidden="true"><i class="ti ti-circle-check" /></span>
           <span class="ont-stap-tekst">
             <span class="ont-stap-titel">Begin je er meteen aan?</span>

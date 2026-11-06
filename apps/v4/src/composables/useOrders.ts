@@ -273,6 +273,16 @@ export function orderTotaal(o: Order): number {
   return o.bedrag + (m?.status === 'akkoord' ? (m.goedgekeurdBedrag ?? m.indicatie ?? 0) : 0)
 }
 
+// Specs van een dienst als label/waarde, voor de orderpagina en de werkbon
+export function dienstEigenschappen(d: Dienst): { label: string; waarde: string }[] {
+  return [
+    { label: 'Glans',       waarde: GLANSGRAAD_LABELS[d.glansgraad] },
+    { label: 'Behandeling', waarde: d.zijdig },
+    { label: 'Structuur',   waarde: d.oppervlaktestructuur === 'glad' ? 'Glad' : 'Huidige structuur' },
+    { label: 'Materiaal',   waarde: OPPERVLAK_LABELS[d.oppervlaktemateriaal] },
+  ]
+}
+
 // ── Orderregels tonen: het aantal voorop, de maat alleen om de regel te herkennen ──
 export function regelNaam(p: PaneelMaat, i: number): string {
   return p.omschrijving || (p.breedte > 0 || p.hoogte > 0 ? 'Paneel' : `Onderdeel ${i + 1}`)

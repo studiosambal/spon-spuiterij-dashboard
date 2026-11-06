@@ -8,6 +8,7 @@ import Opleverdatum from '@/views/Opleverdatum.vue'
 import ProductieFoto from '@/views/ProductieFoto.vue'
 import Profiel from '@/views/Profiel.vue'
 import Account from '@/views/Account.vue'
+import Werkbon from '@/views/Werkbon.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -20,6 +21,7 @@ const router = createRouter({
     { path: '/order/:id/meerwerk', name: 'meerwerk', component: Meerwerk },
     { path: '/order/:id/opleverdatum', name: 'opleverdatum', component: Opleverdatum },
     { path: '/order/:id/foto/:type', name: 'foto', component: ProductieFoto },
+    { path: '/order/:id/werkbon', name: 'werkbon', component: Werkbon },
     { path: '/profiel', name: 'profiel', component: Profiel },
     { path: '/account', name: 'account', component: Account },
   ]

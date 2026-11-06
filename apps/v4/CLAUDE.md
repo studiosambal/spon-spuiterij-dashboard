@@ -78,6 +78,7 @@ bevestigd → (meerwerk_wacht) → ontvangen → in_productie → productie_gere
 | `/order/:id` | OrderDetail — full order + status-driven actions |
 | `/order/:id/ontvangst` | Ontvangst — receipt-confirmation step (registers receipt on mount, starts the clock, offers a photo) |
 | `/order/:id/controle` | Controle — colour & dimension check at start of spraying → in productie |
+| `/order/:id/werkbon` | Werkbon: A4 to print and put with the goods (order number big, klant, dates, per dienst kleur, specs and aantallen). Mobile preview, print CSS shows only the paper. Reached from the Ontvangst confirmation and "Werkbon printen" next to the Opdracht heading (from `ontvangen`). Replaces Robert's photo-as-link idea (6 nov) |
 | `/order/:id/meerwerk` | Meerwerk — afwijking/extra-work reporting (via SpuitwerkOnline) |
 | `/order/:id/opleverdatum` | Opleverdatum — spuiter passes on a new expected completion date (in productie) |
 | `/order/:id/foto/:type` | ProductieFoto — photo documentation (`before`/`after`) |

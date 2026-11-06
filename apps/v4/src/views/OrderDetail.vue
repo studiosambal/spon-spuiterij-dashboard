@@ -56,7 +56,14 @@
       <div class="detail-layout">
         <div class="detail-hoofd">
           <!-- Opdracht — per dienst: naam, kleur, specs, afmetingen -->
-          <h2 class="section-label">{{ order.diensten.length > 1 ? `Diensten (${order.diensten.length})` : 'Opdracht' }}</h2>
+          <div class="od-sectiekop">
+            <h2 class="section-label">{{ order.diensten.length > 1 ? `Diensten (${order.diensten.length})` : 'Opdracht' }}</h2>
+            <!-- Werkbon bij de spullen: zo hoort een stapel altijd bij zijn order -->
+            <button v-if="order.status !== 'bevestigd'" type="button" class="tekst-actie"
+                    @click="router.push('/order/' + order.id + '/werkbon')">
+              <i class="ti ti-printer" aria-hidden="true" /> Werkbon printen
+            </button>
+          </div>
 
           <div v-for="(dienst, di) in order.diensten" :key="di" class="card od-dienst">
             <div class="od-dienst-kop">
@@ -78,7 +85,7 @@
             </div>
 
             <dl class="od-specs">
-              <div v-for="eig in eigenschappen(dienst)" :key="eig.label">
+              <div v-for="eig in dienstEigenschappen(dienst)" :key="eig.label">
                 <dt class="od-label">{{ eig.label }}</dt>
                 <dd>{{ eig.waarde }}</dd>
               </div>
@@ -219,7 +226,7 @@ import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import {
   useOrders, orderLogboek, STATUS_LABELS, STATUS_SEVERITY, STATUS_ORDER,
-  TYPE_SERVICE_LABELS, OPPERVLAK_LABELS, GLANSGRAAD_LABELS,
+  TYPE_SERVICE_LABELS, dienstEigenschappen,
   dienstHoeveelheid, orderTotaal, klantPlaats,
   type Dienst, type PaneelMaat
 } from '@/composables/useOrders'
@@ -411,14 +418,6 @@ function kleurOnbekend(d: Dienst): boolean {
   return d.kleur_methode === 'later' || d.kleur_methode === 'kleurvoorbeeld'
 }
 
-function eigenschappen(d: Dienst): { label: string; waarde: string }[] {
-  return [
-    { label: 'Glans',       waarde: GLANSGRAAD_LABELS[d.glansgraad] },
-    { label: 'Behandeling', waarde: d.zijdig },
-    { label: 'Structuur',   waarde: d.oppervlaktestructuur === 'glad' ? 'Glad' : 'Huidige structuur' },
-    { label: 'Materiaal',   waarde: OPPERVLAK_LABELS[d.oppervlaktemateriaal] },
-  ]
-}
 
 function paneelMaat(p: PaneelMaat): string {
   if (p.breedte > 0 && p.hoogte > 0) return `${p.breedte} × ${p.hoogte} cm`

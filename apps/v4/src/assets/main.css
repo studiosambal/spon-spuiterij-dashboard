@@ -935,3 +935,11 @@ input, textarea, .p-inputtext { font-size: var(--text-base) !important; }
   .detail-row { flex-direction: column; gap: 2px; }
   .detail-row .label { flex: none; }
 }
+
+/* Sectiekop met een tekstactie rechts (Opdracht + Werkbon printen) */
+.od-sectiekop { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+/* Negatieve marge: het tapdoel blijft 44px, maar de rij wordt niet hoger dan de kop,
+   zodat Opdracht en Voortgang op dezelfde hoogte beginnen */
+.od-sectiekop .tekst-actie { display: inline-flex; align-items: center; gap: 4px; padding-right: 0; margin: -12px 0; }
+.detail-layout .od-sectiekop { margin-top: 22px; }
+.detail-layout .od-sectiekop .section-label { margin-top: 0; }
